@@ -37,11 +37,14 @@
     <h2>My Expenses</h2>
     {% for expense in expenses %}
     <div class="expense-item">
-        <span>{{ expense.name }}</span>
-        <span>{{ expense.category }}</span>
-        <span>{{ expense.date }}</span>
-        <span>₹{{ expense.amount }}</span>
-    </div>
+    <span>{{ expense.name }}</span>
+    <span>{{ expense.category }}</span>
+    <span>{{ expense.date }}</span>
+    <span>₹{{ expense.amount }}</span>
+    <form action="/delete/{{ expense.id }}" method="POST">
+        <button type="submit" class="delete-btn">Delete</button>
+    </form>
+</div>
     {% endfor %}
 </div>
 

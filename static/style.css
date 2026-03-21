@@ -80,6 +80,33 @@ button:hover {
     border-radius: 8px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     margin-bottom: 10px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    gap: 16px;
+}
+
+.expense-item span {
+    flex: 1;
+    color: #333;
+    font-size: 14px;
+}
+
+.expense-item form {
+    margin: 0;
+    padding: 0;
+}
+
+.delete-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
 }
