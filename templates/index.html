@@ -16,6 +16,16 @@
         <span class="total-amount">₹{{ "%.2f"|format(total) }}</span>
     </div>
 
+    <!-- Chart section -->
+{% if expenses %}
+<div class="chart-card">
+    <h2>Spending by category</h2>
+    <div class="chart-container">
+        <canvas id="expenseChart"></canvas>
+    </div>
+</div>
+{% endif %}
+
     <!-- Add expense form -->
     <form action="/add" method="POST">
         <label>Expense name</label>
@@ -59,6 +69,56 @@
             <p class="no-expenses">No expenses yet. Add one above!</p>
         {% endif %}
     </div>
+    <!-- Chart.js library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const categoryNames = {{ categories | tojson }};
+    const totals = {{ category_totals | tojson }};
+
+    // Filter out categories with zero spending
+    const labels = [];
+    const data = [];
+    const colors = ['#e67e22', '#2980b9', '#e74c3c', '#27ae60', '#95a5a6'];
+    const filteredColors = [];
+
+    categoryNames.forEach(function(cat, i) {
+        if (totals[i] > 0) {
+            labels.push(cat);
+            data.push(totals[i]);
+            filteredColors.push(colors[i]);
+        }
+    });
+
+    const ctx = document.getElementById('expenseChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: filteredColors,
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ₹' + context.parsed.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
 
 </body>
 </html>

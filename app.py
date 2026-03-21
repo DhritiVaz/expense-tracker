@@ -25,7 +25,20 @@ class Expense(db.Model):
 def index():
     expenses = Expense.query.order_by(Expense.date.desc()).all()
     total = sum(expense.amount for expense in expenses)
-    return render_template('index.html', expenses=expenses, total=total)
+
+    # Calculate total per category
+    categories = ['Food', 'Transport', 'Shopping', 'Health', 'Other']
+    category_totals = []
+    for cat in categories:
+        cat_total = sum(e.amount for e in expenses if e.category == cat)
+        category_totals.append(cat_total)
+
+    return render_template('index.html',
+        expenses=expenses,
+        total=total,
+        categories=categories,
+        category_totals=category_totals
+    )
 
 @app.route('/add', methods=['POST'])
 def add_expense():
