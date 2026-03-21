@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <h1>Expense Tracker</h1>
+
+    <form action="/add" method="POST">
+
+        <label>Expense name</label>
+        <input type="text" name="name" placeholder="e.g. Lunch at cafe">
+
+        <label>Amount</label>
+        <input type="number" name="amount" placeholder="e.g. 250">
+
+        <label>Category</label>
+        <select name="category">
+            <option>Food</option>
+            <option>Transport</option>
+            <option>Shopping</option>
+            <option>Health</option>
+            <option>Other</option>
+        </select>
+
+        <label>Date</label>
+        <input type="date" name="date">
+
+        <button type="submit">Add Expense</button>
+
+    </form>
+
+</body>
+</html>
