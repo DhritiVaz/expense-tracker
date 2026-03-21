@@ -7,118 +7,465 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+<div class="app">
 
-    <h1>Expense Tracker</h1>
-
-    <!-- Total banner -->
-    <div class="total-banner">
-        <span>Total Spent</span>
-        <span class="total-amount">₹{{ "%.2f"|format(total) }}</span>
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <div class="app-icon">₹</div>
+            <span class="app-title">Expense Tracker</span>
+        </div>
+        <div class="topbar-right">
+            <span class="total-chip">₹{{ "%.2f"|format(total) }} total</span>
+            <a href="/export" class="topbar-btn">⬇ Export CSV</a>
+        </div>
     </div>
 
-    <!-- Chart section -->
-{% if expenses %}
-<div class="chart-card">
-    <h2>Spending by category</h2>
-    <div class="chart-container">
-        <canvas id="expenseChart"></canvas>
+    <!-- TAB BAR -->
+    <div class="tabbar">
+        <button class="tab active" onclick="switchTab('overview', this)">Overview</button>
+        <button class="tab" onclick="switchTab('expenses', this)">
+            Expenses <span class="tab-count">{{ expenses|length }}</span>
+        </button>
+        <button class="tab" onclick="switchTab('budget', this)">Budget</button>
+        <button class="tab" onclick="switchTab('reports', this)">Reports</button>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+        <!-- ===== OVERVIEW TAB ===== -->
+        <div class="tab-panel active" id="tab-overview">
+            <div class="overview-grid">
+
+                <!-- Stat 1 -->
+                <div class="stat-block accent-left">
+                    <div class="stat-key">Total spent</div>
+                    <div class="stat-val">₹{{ "%.0f"|format(total) }}</div>
+                    <div class="stat-sub">{{ expenses|length }} transactions</div>
+                </div>
+
+                <!-- Stat 2 -->
+                <div class="stat-block accent-left">
+                    <div class="stat-key">Average</div>
+                    <div class="stat-val">₹{{ "%.0f"|format(total / expenses|length if expenses else 0) }}</div>
+                    <div class="stat-sub">per expense</div>
+                </div>
+
+                <!-- Stat 3 -->
+                <div class="stat-block accent-left">
+                    <div class="stat-key">Biggest expense</div>
+                    <div class="stat-val">₹{{ "%.0f"|format(biggest.amount if biggest else 0) }}</div>
+                    <div class="stat-sub">{{ biggest.name if biggest else '—' }}</div>
+                </div>
+
+                <!-- Chart block -->
+                <div class="chart-block">
+                    <div class="block-header">
+                        <span>By category</span>
+                    </div>
+                    <div class="chart-inner">
+                        {% if expenses %}
+                        <canvas id="expenseChart" style="max-height:160px"></canvas>
+                        {% else %}
+                        <div class="no-data">No data yet</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Monthly comparison -->
+                <div class="compare-block">
+                    <div class="block-header">
+                        <span>Monthly comparison</span>
+                        {% if monthly_diff > 0 %}
+                        <span class="compare-diff diff-up">+₹{{ "%.0f"|format(monthly_diff) }}</span>
+                        {% elif monthly_diff < 0 %}
+                        <span class="compare-diff diff-down">-₹{{ "%.0f"|format(monthly_diff|abs) }}</span>
+                        {% else %}
+                        <span class="compare-diff diff-same">no change</span>
+                        {% endif %}
+                    </div>
+                    <div class="compare-inner">
+                        <div class="compare-month">
+                            <div class="compare-label">This month</div>
+                            <div class="compare-bar-wrap">
+                                <div class="compare-bar" style="width:{{ this_month_pct }}%"></div>
+                            </div>
+                            <div class="compare-val">₹{{ "%.2f"|format(this_month_total) }}</div>
+                        </div>
+                        <div class="compare-month">
+                            <div class="compare-label">Last month</div>
+                            <div class="compare-bar-wrap">
+                                <div class="compare-bar prev" style="width:{{ last_month_pct }}%"></div>
+                            </div>
+                            <div class="compare-val">₹{{ "%.2f"|format(last_month_total) }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity feed -->
+                <div class="activity-block">
+                    <div class="block-header"><span>Recent activity</span></div>
+                    <div class="block-body">
+                        {% for expense in recent_expenses %}
+                        <div class="activity-item">
+                            <div>
+                                <div class="activity-name">{{ expense.name }}</div>
+                                <div class="activity-date">{{ expense.date.strftime('%d %b') }}</div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <span class="badge badge-{{ expense.category|lower }}">{{ expense.category }}</span>
+                                <span class="activity-amount">₹{{ "%.0f"|format(expense.amount) }}</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="no-data">No recent activity</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Insights -->
+                <div class="insight-block">
+                    <div class="block-header"><span>Smart insights</span></div>
+                    <div class="block-body">
+                        {% for insight in insights %}
+                        <div class="insight-row">
+                            <div class="insight-bullet"></div>
+                            <span class="insight-text">{{ insight }}</span>
+                        </div>
+                        {% else %}
+                        <div style="padding:16px; color:var(--text3); font-size:12px;">Add more expenses to generate insights</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ===== EXPENSES TAB ===== -->
+        <div class="tab-panel" id="tab-expenses">
+            <div class="expenses-layout">
+
+                <!-- Add form sidebar -->
+                <div class="exp-sidebar">
+                    <div class="block-header"><span>Add expense</span></div>
+                    <form action="/add" method="POST" class="exp-form">
+                        <div class="field-group">
+                            <label class="field-lbl">Name</label>
+                            <input type="text" name="name" class="field-input" placeholder="e.g. Lunch at cafe" required>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-lbl">Amount (₹)</label>
+                            <input type="number" name="amount" class="field-input" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-lbl">Category</label>
+                            <select name="category" class="field-input">
+                                <option>Food</option>
+                                <option>Transport</option>
+                                <option>Shopping</option>
+                                <option>Health</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-lbl">Date</label>
+                            <input type="date" name="date" class="field-input" required>
+                        </div>
+                        <button type="submit" class="add-btn">+ Add Expense</button>
+                    </form>
+                </div>
+
+                <!-- Table -->
+                <div class="exp-main">
+                    <div class="exp-filterbar">
+                        <form action="/" method="GET" style="display:contents">
+                            <input type="text" name="search" class="filter-input" placeholder="Search expenses..." value="{{ search }}">
+                            <input type="month" name="month" class="filter-input" value="{{ month_filter }}" style="max-width:160px">
+                            <button type="submit" class="filter-submit">Filter</button>
+                            <a href="/" class="filter-clear">Clear</a>
+                        </form>
+                    </div>
+                    <div class="exp-table-wrap">
+                        {% if expenses %}
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Date</th>
+                                    <th style="text-align:right">Amount</th>
+                                    <th style="text-align:right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for expense in expenses %}
+                                <tr>
+                                    <td class="td-name">
+                                        {{ expense.name }}
+                                        {% if expense.name in recurring_names %}
+                                        <span class="recurring-tag">↻</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge badge-{{ expense.category|lower }}">{{ expense.category }}</span></td>
+                                    <td class="td-date">{{ expense.date.strftime('%d %b %Y') }}</td>
+                                    <td class="td-amount">₹{{ "%.2f"|format(expense.amount) }}</td>
+                                    <td class="td-actions">
+                                        <a href="/edit/{{ expense.id }}" class="row-edit">Edit</a>
+                                        <form action="/delete/{{ expense.id }}" method="POST" style="display:inline">
+                                            <button type="submit" class="row-del">Del</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="no-data">No expenses found. Add one from the sidebar.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== BUDGET TAB ===== -->
+        <div class="tab-panel" id="tab-budget">
+            <div class="budget-layout">
+
+                <!-- Budget progress -->
+                <div class="budget-block">
+                    <div class="block-header"><span>Category budgets</span></div>
+                    <div class="budget-list">
+                        {% for cat in budget_data %}
+                        <div class="budget-row">
+                            <div class="budget-row-top">
+                                <span class="budget-cat">{{ cat.name }}</span>
+                                <span class="budget-vals">₹{{ "%.0f"|format(cat.spent) }} / ₹{{ "%.0f"|format(cat.limit) if cat.limit else '—' }}</span>
+                            </div>
+                            {% if cat.limit %}
+                            {% set pct = [[(cat.spent / cat.limit * 100), 0]|max, 100]|min %}
+                            <div class="budget-bar-wrap">
+                                <div class="budget-bar {{ 'over' if pct >= 100 else ('warn' if pct >= 80 else 'ok') }}"
+                                     style="width:{{ pct }}%"></div>
+                            </div>
+                            <div class="budget-pct {{ 'pct-over' if pct >= 100 else ('pct-warn' if pct >= 80 else 'pct-ok') }}">
+                                {{ "%.0f"|format(pct) }}% used
+                                {% if pct >= 100 %}— OVER BUDGET{% endif %}
+                            </div>
+                            {% else %}
+                            <div class="budget-bar-wrap">
+                                <div class="budget-bar ok" style="width:0%"></div>
+                            </div>
+                            <div class="budget-pct pct-ok">No limit set</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <form action="/set_budget" method="POST" class="budget-form">
+                        <select name="category" class="field-input">
+                            <option>Food</option>
+                            <option>Transport</option>
+                            <option>Shopping</option>
+                            <option>Health</option>
+                            <option>Other</option>
+                        </select>
+                        <input type="number" name="limit" class="field-input" placeholder="Budget ₹" style="width:100px">
+                        <button type="submit" class="budget-submit">Set</button>
+                    </form>
+                </div>
+
+                <!-- Over budget alerts -->
+                <div class="budget-block">
+                    <div class="block-header"><span>Alerts</span></div>
+                    <div class="budget-list">
+                        {% for cat in budget_data %}
+                        {% if cat.limit and cat.spent >= cat.limit * 0.8 %}
+                        <div class="budget-row">
+                            <div class="budget-row-top">
+                                <span class="budget-cat">{{ cat.name }}</span>
+                                {% if cat.spent >= cat.limit %}
+                                <span class="compare-diff diff-up">Over budget</span>
+                                {% else %}
+                                <span class="compare-diff diff-same">Near limit</span>
+                                {% endif %}
+                            </div>
+                            <div style="font-size:11px; color:var(--text3); margin-top:2px;">
+                                Spent ₹{{ "%.0f"|format(cat.spent) }} of ₹{{ "%.0f"|format(cat.limit) }} limit
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <div class="no-data">No alerts — you're within all budgets</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Recurring expenses -->
+                <div class="budget-block">
+                    <div class="block-header"><span>Recurring expenses</span></div>
+                    <div class="budget-list">
+                        {% for name in recurring_names %}
+                        <div class="budget-row">
+                            <div class="budget-row-top">
+                                <span class="budget-cat">{{ name }}</span>
+                                <span class="recurring-tag">↻ recurring</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="no-data">No recurring expenses detected</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Category breakdown -->
+                <div class="budget-block">
+                    <div class="block-header"><span>Category breakdown</span></div>
+                    <div class="budget-list">
+                        {% for cat, amt in category_breakdown %}
+                        <div class="report-row">
+                            <span class="badge badge-{{ cat|lower }}">{{ cat }}</span>
+                            <span class="report-value">₹{{ "%.2f"|format(amt) }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ===== REPORTS TAB ===== -->
+        <div class="tab-panel" id="tab-reports">
+            <div class="reports-layout">
+
+                <!-- Biggest expense -->
+                <div class="report-block">
+                    <div class="block-header"><span>Biggest expense</span></div>
+                    <div class="big-stat">
+                        <div class="big-stat-val">₹{{ "%.0f"|format(biggest.amount if biggest else 0) }}</div>
+                        <div class="big-stat-label">{{ biggest.name if biggest else 'No expenses yet' }}</div>
+                        {% if biggest %}
+                        <div style="margin-top:8px;">
+                            <span class="badge badge-{{ biggest.category|lower }}">{{ biggest.category }}</span>
+                            <span style="font-size:11px; color:var(--text3); margin-left:8px;">{{ biggest.date.strftime('%d %b %Y') }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Monthly totals -->
+                <div class="report-block">
+                    <div class="block-header"><span>Monthly totals</span></div>
+                    <div class="report-list">
+                        {% for month_name, month_total in monthly_totals %}
+                        <div class="report-row">
+                            <span class="report-label">{{ month_name }}</span>
+                            <span class="report-value">₹{{ "%.2f"|format(month_total) }}</span>
+                        </div>
+                        {% else %}
+                        <div class="no-data">No data yet</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Top expenses -->
+                <div class="report-block">
+                    <div class="block-header"><span>Top 5 expenses</span></div>
+                    <div class="report-list">
+                        {% for expense in top_expenses %}
+                        <div class="report-row">
+                            <div>
+                                <div style="font-size:12px; color:var(--text); font-weight:500;">{{ expense.name }}</div>
+                                <div style="font-size:10px; color:var(--text3); font-family:var(--mono);">{{ expense.date.strftime('%d %b %Y') }}</div>
+                            </div>
+                            <span class="report-value">₹{{ "%.2f"|format(expense.amount) }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Daily average -->
+                <div class="report-block">
+                    <div class="block-header"><span>Daily average</span></div>
+                    <div class="big-stat">
+                        <div class="big-stat-val">₹{{ "%.0f"|format(daily_avg) }}</div>
+                        <div class="big-stat-label">per day this month</div>
+                    </div>
+                </div>
+
+                <!-- Category totals -->
+                <div class="report-block">
+                    <div class="block-header"><span>By category</span></div>
+                    <div class="report-list">
+                        {% for cat, amt in category_breakdown %}
+                        <div class="report-row">
+                            <span class="report-label">{{ cat }}</span>
+                            <span class="report-value">₹{{ "%.2f"|format(amt) }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Weekday vs weekend -->
+                <div class="report-block">
+                    <div class="block-header"><span>Weekday vs weekend</span></div>
+                    <div class="big-stat">
+                        <div style="margin-bottom:16px;">
+                            <div class="big-stat-label" style="margin-bottom:4px;">Weekdays</div>
+                            <div style="font-family:var(--mono); font-size:22px; color:var(--accent);">₹{{ "%.0f"|format(weekday_total) }}</div>
+                        </div>
+                        <div>
+                            <div class="big-stat-label" style="margin-bottom:4px;">Weekends</div>
+                            <div style="font-family:var(--mono); font-size:22px; color:var(--text2);">₹{{ "%.0f"|format(weekend_total) }}</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
     </div>
 </div>
-{% endif %}
 
-    <!-- Add expense form -->
-    <form action="/add" method="POST">
-        <label>Expense name</label>
-        <input type="text" name="name" placeholder="e.g. Lunch at cafe" required>
-
-        <label>Amount</label>
-        <input type="number" name="amount" placeholder="e.g. 250" step="0.01" required>
-
-        <label>Category</label>
-        <select name="category">
-            <option>Food</option>
-            <option>Transport</option>
-            <option>Shopping</option>
-            <option>Health</option>
-            <option>Other</option>
-        </select>
-
-        <label>Date</label>
-        <input type="date" name="date" required>
-
-        <button type="submit">Add Expense</button>
-    </form>
-
-    <!-- Expense list -->
-    <div class="expense-list">
-        <h2>My Expenses</h2>
-
-        {% if expenses %}
-            {% for expense in expenses %}
-            <div class="expense-item">
-                <span class="expense-name">{{ expense.name }}</span>
-                <span class="badge badge-{{ expense.category | lower }}">{{ expense.category }}</span>
-                <span class="expense-date">{{ expense.date.strftime('%d %b %Y') }}</span>
-                <span class="expense-amount">₹{{ "%.2f"|format(expense.amount) }}</span>
-                <form action="/delete/{{ expense.id }}" method="POST">
-                    <button type="submit" class="delete-btn">Delete</button>
-                </form>
-            </div>
-            {% endfor %}
-        {% else %}
-            <p class="no-expenses">No expenses yet. Add one above!</p>
-        {% endif %}
-    </div>
-    <!-- Chart.js library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-    const categoryNames = {{ categories | tojson }};
-    const totals = {{ category_totals | tojson }};
+function switchTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+}
 
-    // Filter out categories with zero spending
-    const labels = [];
-    const data = [];
-    const colors = ['#e67e22', '#2980b9', '#e74c3c', '#27ae60', '#95a5a6'];
-    const filteredColors = [];
+{% if expenses %}
+const categoryNames = {{ categories | tojson }};
+const totals = {{ category_totals | tojson }};
+const labels = [], data = [], colors = [];
+const palette = ['#c8924a','#6aabcf','#b87fc8','#6ab87a','#909090'];
 
-    categoryNames.forEach(function(cat, i) {
-        if (totals[i] > 0) {
-            labels.push(cat);
-            data.push(totals[i]);
-            filteredColors.push(colors[i]);
-        }
-    });
+categoryNames.forEach(function(cat, i) {
+    if (totals[i] > 0) { labels.push(cat); data.push(totals[i]); colors.push(palette[i]); }
+});
 
-    const ctx = document.getElementById('expenseChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: labels,
-            datasets: [{
-                data: data,
-                backgroundColor: filteredColors,
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'right'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.label + ': ₹' + context.parsed.toFixed(2);
-                        }
-                    }
-                }
+new Chart(document.getElementById('expenseChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+        labels: labels,
+        datasets: [{ data: data, backgroundColor: colors, borderWidth: 0, hoverOffset: 3 }]
+    },
+    options: {
+        responsive: true,
+        cutout: '68%',
+        plugins: {
+            legend: {
+                position: 'right',
+                labels: { color: '#9e9e9e', font: { size: 10, family: 'JetBrains Mono' }, padding: 10, boxWidth: 8, boxHeight: 8 }
+            },
+            tooltip: {
+                callbacks: { label: function(c) { return ' ₹' + c.parsed.toFixed(2); } }
             }
         }
-    });
+    }
+});
+{% endif %}
 </script>
-
 </body>
 </html>
