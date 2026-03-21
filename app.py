@@ -46,6 +46,34 @@ def get_insights(expenses):
     insights.append(f"Biggest single spend: {big.name} at ₹{big.amount:.2f}")
     return insights
 
+def get_streak(expenses):
+    if not expenses:
+        return 0
+    today = date.today()
+    streak = 0
+    check_date = today
+    expense_dates = {e.date for e in expenses}
+    while check_date in expense_dates:
+        streak += 1
+        check_date = date(check_date.year, check_date.month, check_date.day - 1) if check_date.day > 1 else date(check_date.year, check_date.month - 1 if check_date.month > 1 else 12, 28)
+    return streak
+
+def get_personality(expenses):
+    if not expenses:
+        return {'icon': '👤', 'title': 'New here', 'desc': 'Add expenses to discover your spending personality'}
+    cat_totals = {}
+    for e in expenses:
+        cat_totals[e.category] = cat_totals.get(e.category, 0) + e.amount
+    top = max(cat_totals, key=cat_totals.get) if cat_totals else 'Other'
+    personalities = {
+        'Food': {'icon': '🍕', 'title': 'The Foodie', 'desc': 'You live to eat. Food is your biggest joy and expense.'},
+        'Transport': {'icon': '🚗', 'title': 'The Commuter', 'desc': 'Always on the move. You spend big on getting around.'},
+        'Shopping': {'icon': '🛍', 'title': 'The Impulse Buyer', 'desc': 'Retail therapy is real for you. You love a good purchase.'},
+        'Health': {'icon': '💪', 'title': 'The Wellness Seeker', 'desc': 'You invest in your health more than most. Respect.'},
+        'Other': {'icon': '🎯', 'title': 'The Wildcard', 'desc': 'Unpredictable and diverse spending. You keep things interesting.'},
+    }
+    return personalities.get(top, personalities['Other'])
+
 def get_recurring(expenses):
     counts = Counter(e.name.lower() for e in expenses)
     return {name for name, c in counts.items() if c > 1}
@@ -121,7 +149,9 @@ def index():
         monthly_totals=monthly_totals,
         daily_avg=daily_avg,
         weekday_total=weekday_total, weekend_total=weekend_total,
-        recent_expenses=all_expenses[:8] if all_expenses else []
+        recent_expenses=all_expenses[:8] if all_expenses else [],
+        streak=get_streak(all_expenses),
+        personality=get_personality(all_expenses)
     )
 
 @app.route('/add', methods=['POST'])
