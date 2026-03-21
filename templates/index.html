@@ -33,6 +33,17 @@
         <button type="submit">Add Expense</button>
 
     </form>
+    <div class="expense-list">
+    <h2>My Expenses</h2>
+    {% for expense in expenses %}
+    <div class="expense-item">
+        <span>{{ expense.name }}</span>
+        <span>{{ expense.category }}</span>
+        <span>{{ expense.date }}</span>
+        <span>₹{{ expense.amount }}</span>
+    </div>
+    {% endfor %}
+</div>
 
 </body>
 </html>

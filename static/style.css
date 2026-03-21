@@ -63,3 +63,23 @@ button {
 button:hover {
     background-color: #2980b9;
 }
+
+.expense-list {
+    max-width: 500px;
+    margin: 30px auto;
+}
+
+.expense-list h2 {
+    margin-bottom: 16px;
+    color: #2c3e50;
+}
+
+.expense-item {
+    background: white;
+    padding: 14px 20px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
