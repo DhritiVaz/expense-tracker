@@ -13,10 +13,31 @@ body {
 
 h1 {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 24px;
     color: #2c3e50;
+    font-size: 28px;
 }
 
+/* Total banner */
+.total-banner {
+    max-width: 500px;
+    margin: 0 auto 24px;
+    background: #2c3e50;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.total-amount {
+    font-size: 22px;
+    font-weight: bold;
+    color: #2ecc71;
+}
+
+/* Form */
 form {
     background: white;
     max-width: 500px;
@@ -49,7 +70,7 @@ input:focus, select:focus {
     border-color: #3498db;
 }
 
-button {
+button[type="submit"]:not(.delete-btn) {
     background-color: #3498db;
     color: white;
     padding: 12px;
@@ -60,10 +81,11 @@ button {
     margin-top: 8px;
 }
 
-button:hover {
+button[type="submit"]:not(.delete-btn):hover {
     background-color: #2980b9;
 }
 
+/* Expense list */
 .expense-list {
     max-width: 500px;
     margin: 30px auto;
@@ -83,20 +105,42 @@ button:hover {
     align-items: center;
     margin-bottom: 10px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    gap: 16px;
+    gap: 12px;
 }
 
-.expense-item span {
-    flex: 1;
-    color: #333;
+.expense-name {
+    flex: 2;
+    font-weight: bold;
     font-size: 14px;
 }
 
-.expense-item form {
-    margin: 0;
-    padding: 0;
+.expense-date {
+    flex: 1;
+    font-size: 13px;
+    color: #888;
 }
 
+.expense-amount {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 15px;
+}
+
+/* Category badges */
+.badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge-food { background: #fdebd0; color: #e67e22; }
+.badge-transport { background: #d6eaf8; color: #2980b9; }
+.badge-shopping { background: #f9ebea; color: #e74c3c; }
+.badge-health { background: #d5f5e3; color: #27ae60; }
+.badge-other { background: #f0f0f0; color: #666; }
+
+/* Delete button */
 .delete-btn {
     background-color: #e74c3c;
     color: white;
@@ -109,4 +153,18 @@ button:hover {
 
 .delete-btn:hover {
     background-color: #c0392b;
+}
+
+.expense-item form {
+    margin: 0;
+    padding: 0;
+}
+
+/* Empty state */
+.no-expenses {
+    text-align: center;
+    color: #aaa;
+    padding: 30px;
+    background: white;
+    border-radius: 8px;
 }

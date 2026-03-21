@@ -10,13 +10,19 @@
 
     <h1>Expense Tracker</h1>
 
-    <form action="/add" method="POST">
+    <!-- Total banner -->
+    <div class="total-banner">
+        <span>Total Spent</span>
+        <span class="total-amount">₹{{ "%.2f"|format(total) }}</span>
+    </div>
 
+    <!-- Add expense form -->
+    <form action="/add" method="POST">
         <label>Expense name</label>
-        <input type="text" name="name" placeholder="e.g. Lunch at cafe">
+        <input type="text" name="name" placeholder="e.g. Lunch at cafe" required>
 
         <label>Amount</label>
-        <input type="number" name="amount" placeholder="e.g. 250">
+        <input type="number" name="amount" placeholder="e.g. 250" step="0.01" required>
 
         <label>Category</label>
         <select name="category">
@@ -28,25 +34,31 @@
         </select>
 
         <label>Date</label>
-        <input type="date" name="date">
+        <input type="date" name="date" required>
 
         <button type="submit">Add Expense</button>
+    </form>
 
-    </form>
+    <!-- Expense list -->
     <div class="expense-list">
-    <h2>My Expenses</h2>
-    {% for expense in expenses %}
-    <div class="expense-item">
-    <span>{{ expense.name }}</span>
-    <span>{{ expense.category }}</span>
-    <span>{{ expense.date }}</span>
-    <span>₹{{ expense.amount }}</span>
-    <form action="/delete/{{ expense.id }}" method="POST">
-        <button type="submit" class="delete-btn">Delete</button>
-    </form>
-</div>
-    {% endfor %}
-</div>
+        <h2>My Expenses</h2>
+
+        {% if expenses %}
+            {% for expense in expenses %}
+            <div class="expense-item">
+                <span class="expense-name">{{ expense.name }}</span>
+                <span class="badge badge-{{ expense.category | lower }}">{{ expense.category }}</span>
+                <span class="expense-date">{{ expense.date.strftime('%d %b %Y') }}</span>
+                <span class="expense-amount">₹{{ "%.2f"|format(expense.amount) }}</span>
+                <form action="/delete/{{ expense.id }}" method="POST">
+                    <button type="submit" class="delete-btn">Delete</button>
+                </form>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-expenses">No expenses yet. Add one above!</p>
+        {% endif %}
+    </div>
 
 </body>
 </html>
