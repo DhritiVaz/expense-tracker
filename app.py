@@ -89,7 +89,7 @@ def index():
     if search:
         query = query.filter(Expense.name.ilike(f'%{search}%'))
     expenses = query.order_by(Expense.date.desc()).all()
-    all_expenses = Expense.query.all()
+    all_expenses = Expense.query.order_by(Expense.date.desc()).all()
     total = sum(e.amount for e in expenses)
 
     categories = ['Food', 'Transport', 'Shopping', 'Health', 'Other']

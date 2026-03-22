@@ -18,7 +18,7 @@
         <div class="topbar-right">
             <span class="total-chip">₹{{ "%.2f"|format(total) }} total</span>
             <a href="/export" class="topbar-btn">⬇ Export CSV</a>
-            <button class="topbar-btn" onclick="toggleTheme()">Toggle theme</button>
+            <button class="topbar-btn theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
         </div>
     </div>
 
@@ -27,7 +27,7 @@
         <span class="nl-label">Quick add</span>
         <input type="text" class="nl-input" id="nlInput" placeholder='e.g. "coffee 80 today" or "auto 150 transport yesterday"'>
         <button class="nl-btn" onclick="parseNL()">Add</button>
-        <span class="nl-hint">Type naturally → <span>switches to Expenses tab with form filled</span></span>
+        <span class="nl-hint">e.g. <span>"lunch 80 today"</span> or <span>"auto 150 19 mar"</span> — adds instantly</span>
     </div>
 
     <!-- TAB BAR -->
@@ -333,81 +333,81 @@
 </div>
 
         <!-- ===== REPORTS ===== -->
-        <div class="tab-panel" id="tab-reports">
-            <div class="reports-layout">
+<div class="tab-panel" id="tab-reports">
+    <div class="reports-layout">
 
-                <div class="report-block">
-                    <div class="block-header"><span>Biggest expense</span></div>
-                    <div class="big-stat">
-                        <div class="big-stat-val">₹{{ "%.0f"|format(biggest.amount if biggest else 0) }}</div>
-                        <div class="big-stat-label">{{ biggest.name if biggest else 'No expenses yet' }}</div>
-                        {% if biggest %}
-                        <div class="big-stat-sub">
-                            <span class="badge badge-{{ biggest.category|lower }}">{{ biggest.category }}</span>
-                            <span style="margin-left:6px;font-size:11px;color:var(--text3);font-family:var(--mono)">{{ biggest.date.strftime('%d %b %Y') }}</span>
-                        </div>
-                        {% endif %}
-                    </div>
+        <div class="report-block">
+            <div class="block-header"><span>Biggest expense</span></div>
+            <div class="big-stat">
+                <div class="big-stat-val">₹{{ "%.0f"|format(biggest.amount if biggest else 0) }}</div>
+                <div class="big-stat-label">{{ biggest.name if biggest else 'No expenses yet' }}</div>
+                {% if biggest %}
+                <div class="big-stat-sub">
+                    <span class="badge badge-{{ biggest.category|lower }}">{{ biggest.category }}</span>
+                    <span style="margin-left:6px;font-size:11px;color:var(--text3);font-family:var(--mono)">{{ biggest.date.strftime('%d %b %Y') }}</span>
                 </div>
-
-                <div class="report-block">
-                    <div class="block-header"><span>Daily average</span></div>
-                    <div class="big-stat">
-                        <div class="big-stat-val">₹{{ "%.0f"|format(daily_avg) }}</div>
-                        <div class="big-stat-label">per day this month</div>
-                    </div>
-                </div>
-
-                <div class="report-block">
-                    <div class="block-header"><span>Weekday vs weekend</span></div>
-                    <div class="big-stat">
-                        <div style="margin-bottom:14px">
-                            <div class="big-stat-label">Weekdays</div>
-                            <div style="font-family:var(--mono);font-size:22px;color:var(--accent)">₹{{ "%.0f"|format(weekday_total) }}</div>
-                        </div>
-                        <div>
-                            <div class="big-stat-label">Weekends</div>
-                            <div style="font-family:var(--mono);font-size:22px;color:var(--text2)">₹{{ "%.0f"|format(weekend_total) }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="chart-report-block">
-                    <div class="block-header"><span>Monthly spending</span></div>
-                    <div class="chart-report-inner">
-                        <canvas id="barChart" style="max-height:160px"></canvas>
-                    </div>
-                </div>
-
-                <div class="report-block">
-                    <div class="block-header"><span>Top 5 expenses</span></div>
-                    <div class="report-list">
-                        {% for expense in top_expenses %}
-                        <div class="report-row">
-                            <div>
-                                <div style="font-size:12px;color:var(--text);font-weight:500">{{ expense.name }}</div>
-                                <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">{{ expense.date.strftime('%d %b %Y') }}</div>
-                            </div>
-                            <span class="report-value">₹{{ "%.2f"|format(expense.amount) }}</span>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <div class="report-block">
-                    <div class="block-header"><span>By category</span></div>
-                    <div class="report-list">
-                        {% for cat, amt in category_breakdown %}
-                        <div class="report-row">
-                            <span class="badge badge-{{ cat|lower }}">{{ cat }}</span>
-                            <span class="report-value">₹{{ "%.2f"|format(amt) }}</span>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-
+                {% endif %}
             </div>
         </div>
+
+        <div class="report-block">
+            <div class="block-header"><span>Daily average</span></div>
+            <div class="big-stat">
+                <div class="big-stat-val">₹{{ "%.0f"|format(daily_avg) }}</div>
+                <div class="big-stat-label">per day this month</div>
+            </div>
+        </div>
+
+        <div class="report-block">
+            <div class="block-header"><span>Weekday vs weekend</span></div>
+            <div class="big-stat">
+                <div style="margin-bottom:14px">
+                    <div class="big-stat-label">Weekdays</div>
+                    <div style="font-family:var(--mono);font-size:22px;color:var(--accent)">₹{{ "%.0f"|format(weekday_total) }}</div>
+                </div>
+                <div>
+                    <div class="big-stat-label">Weekends</div>
+                    <div style="font-family:var(--mono);font-size:22px;color:var(--text2)">₹{{ "%.0f"|format(weekend_total) }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="report-block">
+            <div class="block-header"><span>Top 5 expenses</span></div>
+            <div class="report-list">
+                {% for expense in top_expenses %}
+                <div class="report-row">
+                    <div>
+                        <div style="font-size:12px;color:var(--text);font-weight:500">{{ expense.name }}</div>
+                        <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">{{ expense.date.strftime('%d %b %Y') }}</div>
+                    </div>
+                    <span class="report-value">₹{{ "%.2f"|format(expense.amount) }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="report-block">
+            <div class="block-header"><span>Monthly spending</span></div>
+            <div style="padding:12px 16px;flex:1;display:flex;align-items:center;">
+                <canvas id="barChart" style="max-height:160px;width:100%"></canvas>
+            </div>
+        </div>
+
+        <div class="report-block">
+            <div class="block-header"><span>By category</span></div>
+            <div class="report-list">
+                {% for cat, amt in category_breakdown %}
+                <div class="report-row">
+                    <span class="badge badge-{{ cat|lower }}">{{ cat }}</span>
+                    <span class="report-value">₹{{ "%.2f"|format(amt) }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
 
     </div>
 </div>
@@ -434,10 +434,14 @@ function toggleTheme() {
     const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     html.setAttribute('data-theme', next);
     localStorage.setItem('theme', next);
+    document.getElementById('themeBtn').textContent = next === 'dark' ? '🌙' : '☀️';
 }
 
 const saved = localStorage.getItem('theme');
-if (saved) document.documentElement.setAttribute('data-theme', saved);
+if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+    document.getElementById('themeBtn').textContent = saved === 'dark' ? '🌙' : '☀️';
+}
 
 // Toast
 function showToast(msg) {
@@ -481,18 +485,27 @@ if (input.includes('yesterday')) {
     const months = ['january','february','march','april','may','june','july','august','september','october','november','december'];
     
     // "on 19 march" or "19 march" or "march 19"
-    const monthMatch = input.match(/(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december)/i)
-                    || input.match(/(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})/i);
-    
+    const monthNames = 'january|february|march|april|may|june|july|august|september|october|november|december';
+const shortMonths = 'jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec';
+const allMonths = monthNames + '|' + shortMonths;
+
+const monthMatch = input.match(new RegExp('(\\d{1,2})\\s+(' + allMonths + ')', 'i'))
+                || input.match(new RegExp('(' + allMonths + ')\\s+(\\d{1,2})', 'i'));
     if (monthMatch) {
-        const day = parseInt(monthMatch[1]) || parseInt(monthMatch[2]);
-        const monthName = (monthMatch[2] || monthMatch[1]).toLowerCase();
-        const monthIndex = months.indexOf(monthName);
-        if (monthIndex !== -1 && day >= 1 && day <= 31) {
-            date.setMonth(monthIndex);
-            date.setDate(day);
-        }
+    const fullMonths = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+    const shortMonthList = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    
+    const day = parseInt(monthMatch[1]) || parseInt(monthMatch[2]);
+    const monthName = (monthMatch[2] || monthMatch[1]).toLowerCase();
+    
+    let monthIndex = fullMonths.indexOf(monthName);
+    if (monthIndex === -1) monthIndex = shortMonthList.indexOf(monthName);
+    
+    if (monthIndex !== -1 && day >= 1 && day <= 31) {
+        date.setMonth(monthIndex);
+        date.setDate(day);
     }
+}
     
     // "19/3" or "19-3"
     const numericMatch = input.match(/(\d{1,2})[\/\-](\d{1,2})/);
