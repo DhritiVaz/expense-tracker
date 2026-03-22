@@ -304,6 +304,7 @@ def export_csv():
         headers={'Content-Disposition': 'attachment; filename=expenses.csv'})
 
 with app.app_context():
+    db.drop_all()
     db.create_all()
 
 @app.route('/reset-db-now')
