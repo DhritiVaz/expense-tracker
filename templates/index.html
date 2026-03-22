@@ -19,6 +19,8 @@
             <span class="total-chip">₹{{ "%.2f"|format(total) }} total</span>
             <a href="/export" class="topbar-btn">⬇ Export CSV</a>
             <button class="topbar-btn theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+<span style="font-size:12px;color:var(--text3);margin-left:4px;">{{ current_user.name }}</span>
+<a href="/logout" class="topbar-btn" style="color:var(--danger);">Logout</a>
         </div>
     </div>
 
