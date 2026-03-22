@@ -445,6 +445,14 @@ if (saved) {
     document.getElementById('themeBtn').textContent = saved === 'dark' ? '🌙' : '☀️';
 }
 
+// Auto-switch to tab from URL parameter
+const urlParams = new URLSearchParams(window.location.search);
+const tabParam = urlParams.get('tab');
+if (tabParam) {
+    const tabBtn = document.querySelector(`.tab[onclick*="${tabParam}"]`);
+    if (tabBtn) switchTab(tabParam, tabBtn);
+}
+
 // Toast
 function showToast(msg) {
     const t = document.getElementById('toast');

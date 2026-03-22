@@ -260,7 +260,7 @@ def delete_expense(eid):
         return redirect(url_for('index'))
     db.session.delete(expense)
     db.session.commit()
-    return redirect(url_for('index'))
+    return redirect(url_for('index') + '?tab=expenses')
 
 @app.route('/edit/<int:eid>', methods=['GET', 'POST'])
 @login_required
