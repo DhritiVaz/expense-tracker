@@ -209,7 +209,7 @@ html, body {
 .content { overflow: hidden; position: relative; }
 
 .tab-panel { display: none; height: 100%; overflow: hidden; }
-.tab-panel.active { display: block; }
+.tab-panel.active { display: block; height: 100%; }
 
 /* ===== OVERVIEW ===== */
 .overview-grid {
@@ -944,4 +944,12 @@ tbody td { padding: 9px 14px; font-size: 12px; vertical-align: middle; }
     .stat-val { font-size: 18px; }
     .overview-grid { grid-template-columns: 1fr; }
     .insight-block, .chart-block, .activity-block, .compare-block { grid-column: 1; }
+}
+
+#tab-accounts {
+    height: 100%;
+}
+
+#tab-accounts .expenses-layout {
+    height: 100%;
 }

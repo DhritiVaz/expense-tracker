@@ -30,6 +30,7 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expenses = db.relationship('Expense', backref='user', lazy=True, cascade='all, delete-orphan')
     budgets = db.relationship('Budget', backref='user', lazy=True, cascade='all, delete-orphan')
+    accounts = db.relationship('Account', backref='user', lazy=True, cascade='all, delete-orphan')
 
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -44,6 +45,13 @@ class Budget(db.Model):
     category = db.Column(db.String(50), nullable=False)
     limit = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+class Account(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    balance = db.Column(db.Float, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -217,8 +225,14 @@ def index():
     daily_avg = this_m / days_in_month if days_in_month > 0 else 0
     weekday_total = sum(e.amount for e in all_expenses if e.date.weekday() < 5)
     weekend_total = sum(e.amount for e in all_expenses if e.date.weekday() >= 5)
+    accounts = Account.query.filter_by(user_id=current_user.id).all()
+    total_balance = sum(a.balance for a in accounts)
+    balance_after_spending = total_balance - total
 
     return render_template('index.html',
+        accounts=accounts,
+        total_balance=total_balance,
+        balance_after_spending=balance_after_spending,
         expenses=expenses, total=total,
         categories=categories, category_totals=category_totals,
         month_filter=month_filter, search=search,
@@ -305,6 +319,39 @@ def export_csv():
 
 with app.app_context():
     db.create_all()
+
+@app.route('/accounts/add', methods=['POST'])
+@login_required
+def add_account():
+    name = request.form['name']
+    balance = float(request.form['balance'])
+    db.session.add(Account(
+        name=name,
+        balance=balance,
+        user_id=current_user.id
+    ))
+    db.session.commit()
+    return redirect(url_for('index') + '?tab=accounts')
+
+@app.route('/accounts/delete/<int:aid>', methods=['POST'])
+@login_required
+def delete_account(aid):
+    account = Account.query.get_or_404(aid)
+    if account.user_id != current_user.id:
+        return redirect(url_for('index'))
+    db.session.delete(account)
+    db.session.commit()
+    return redirect(url_for('index') + '?tab=accounts')
+
+@app.route('/accounts/update/<int:aid>', methods=['POST'])
+@login_required
+def update_account(aid):
+    account = Account.query.get_or_404(aid)
+    if account.user_id != current_user.id:
+        return redirect(url_for('index'))
+    account.balance = float(request.form['balance'])
+    db.session.commit()
+    return redirect(url_for('index') + '?tab=accounts')
 
 if __name__ == '__main__':
     app.run(debug=True)

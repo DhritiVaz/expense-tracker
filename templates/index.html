@@ -19,15 +19,15 @@
             <span class="total-chip">₹{{ "%.2f"|format(total) }} total</span>
             <a href="/export" class="topbar-btn">⬇ Export CSV</a>
             <button class="topbar-btn theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
-<span style="font-size:12px;color:var(--text3);margin-left:4px;">{{ current_user.name }}</span>
-<a href="/logout" class="topbar-btn" style="color:var(--danger);">Logout</a>
+            <span style="font-size:12px;color:var(--text3);margin-left:4px;">{{ current_user.name }}</span>
+            <a href="/logout" class="topbar-btn" style="color:var(--danger);">Logout</a>
         </div>
     </div>
 
     <!-- NL BAR -->
     <div class="nlbar">
         <span class="nl-label">Quick add</span>
-        <input type="text" class="nl-input" id="nlInput" placeholder='e.g. "coffee 80 today" or "auto 150 transport yesterday"'>
+        <input type="text" class="nl-input" id="nlInput" placeholder='e.g. "coffee 80 today" or "auto 150 19 mar"'>
         <button class="nl-btn" onclick="parseNL()">Add</button>
         <span class="nl-hint">e.g. <span>"lunch 80 today"</span> or <span>"auto 150 19 mar"</span> — adds instantly</span>
     </div>
@@ -40,6 +40,7 @@
         </button>
         <button class="tab" onclick="switchTab('budget', this)">Budget</button>
         <button class="tab" onclick="switchTab('reports', this)">Reports</button>
+        <button class="tab" onclick="switchTab('accounts', this)">Accounts</button>
     </div>
 
     <!-- CONTENT -->
@@ -67,11 +68,9 @@
                     <div class="stat-sub">{{ biggest.name if biggest else '—' }}</div>
                 </div>
 
-                <!-- Right panel: personality + streak + insights -->
                 <div class="insight-block">
                     <div class="block-header"><span>Overview</span></div>
                     <div class="block-body">
-                        <!-- Personality -->
                         <div class="personality-row">
                             <div class="personality-icon">{{ personality.icon }}</div>
                             <div class="personality-info">
@@ -79,12 +78,10 @@
                                 <div class="personality-desc">{{ personality.desc }}</div>
                             </div>
                         </div>
-                        <!-- Streak -->
                         <div class="streak-row">
                             <span class="streak-label">🔥 Logging streak</span>
                             <span class="streak-val">{{ streak }} day{{ 's' if streak != 1 else '' }}</span>
                         </div>
-                        <!-- Insights -->
                         {% for insight in insights %}
                         <div class="insight-row">
                             <div class="insight-bullet"></div>
@@ -96,7 +93,6 @@
                     </div>
                 </div>
 
-                <!-- Chart -->
                 <div class="chart-block">
                     <div class="block-header"><span>By category</span></div>
                     <div class="chart-inner">
@@ -108,7 +104,6 @@
                     </div>
                 </div>
 
-                <!-- Monthly comparison -->
                 <div class="compare-block">
                     <div class="block-header">
                         <span>Monthly comparison</span>
@@ -138,7 +133,6 @@
                     </div>
                 </div>
 
-                <!-- Activity -->
                 <div class="activity-block">
                     <div class="block-header"><span>Recent activity</span></div>
                     <div class="block-body">
@@ -245,171 +239,250 @@
         </div>
 
         <!-- ===== BUDGET ===== -->
-<div class="tab-panel" id="tab-budget">
-    <div class="budget-layout">
+        <div class="tab-panel" id="tab-budget">
+            <div class="budget-layout">
 
-        <!-- Category budgets with inline alerts -->
-        <div class="budget-block">
-            <div class="block-header"><span>Category budgets</span></div>
-            <div class="budget-list">
-                {% for cat in budget_data %}
-                <div class="budget-row">
-                    <div class="budget-row-top">
-                        <span class="budget-cat">{{ cat.name }}</span>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            {% if cat.limit and cat.spent >= cat.limit %}
-                            <span style="font-size:10px;color:var(--danger);font-family:var(--mono);background:var(--danger-bg);padding:2px 6px;border-radius:3px;">OVER</span>
-                            {% elif cat.limit and cat.spent >= cat.limit * 0.8 %}
-                            <span style="font-size:10px;color:var(--warning);font-family:var(--mono);background:var(--warning-bg);padding:2px 6px;border-radius:3px;">NEAR</span>
+                <div class="budget-block">
+                    <div class="block-header"><span>Category budgets</span></div>
+                    <div class="budget-list">
+                        {% for cat in budget_data %}
+                        <div class="budget-row">
+                            <div class="budget-row-top">
+                                <span class="budget-cat">{{ cat.name }}</span>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    {% if cat.limit and cat.spent >= cat.limit %}
+                                    <span style="font-size:10px;color:var(--danger);font-family:var(--mono);background:var(--danger-bg);padding:2px 6px;border-radius:3px;">OVER</span>
+                                    {% elif cat.limit and cat.spent >= cat.limit * 0.8 %}
+                                    <span style="font-size:10px;color:var(--warning);font-family:var(--mono);background:var(--warning-bg);padding:2px 6px;border-radius:3px;">NEAR</span>
+                                    {% endif %}
+                                    <span class="budget-vals">₹{{ "%.0f"|format(cat.spent) }} / {% if cat.limit %}₹{{ "%.0f"|format(cat.limit) }}{% else %}—{% endif %}</span>
+                                </div>
+                            </div>
+                            {% if cat.limit %}
+                            {% set pct = [[cat.spent / cat.limit * 100, 0]|max, 100]|min %}
+                            <div class="budget-bar-wrap">
+                                <div class="budget-bar {{ 'over' if pct >= 100 else ('warn' if pct >= 80 else 'ok') }}" style="width:{{ pct }}%"></div>
+                            </div>
+                            <div class="budget-pct {{ 'pct-over' if pct >= 100 else ('pct-warn' if pct >= 80 else 'pct-ok') }}">
+                                {{ "%.0f"|format(pct) }}% used{% if pct >= 100 %} — over budget{% endif %}
+                            </div>
+                            {% else %}
+                            <div class="budget-bar-wrap"><div class="budget-bar ok" style="width:0%"></div></div>
+                            <div class="budget-pct pct-ok">No limit set</div>
                             {% endif %}
-                            <span class="budget-vals">₹{{ "%.0f"|format(cat.spent) }} / {% if cat.limit %}₹{{ "%.0f"|format(cat.limit) }}{% else %}—{% endif %}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <form action="/set_budget" method="POST" class="budget-form">
+                        <select name="category">
+                            <option>Food</option><option>Transport</option><option>Shopping</option><option>Health</option><option>Other</option>
+                        </select>
+                        <input type="number" name="limit" placeholder="₹ budget" style="width:90px">
+                        <button type="submit" class="budget-submit">Set</button>
+                    </form>
+                </div>
+
+                <div class="afford-block">
+                    <div class="block-header"><span>Can I afford it?</span></div>
+                    <div class="afford-form">
+                        <div class="afford-row">
+                            <input type="text" class="afford-input" id="affordName" placeholder="What do you want to buy?">
+                        </div>
+                        <div class="afford-row">
+                            <input type="number" class="afford-input" id="affordAmt" placeholder="₹ how much does it cost?">
+                            <button class="afford-btn" onclick="checkAfford()">Check</button>
                         </div>
                     </div>
-                    {% if cat.limit %}
-                    {% set pct = [[cat.spent / cat.limit * 100, 0]|max, 100]|min %}
-                    <div class="budget-bar-wrap">
-                        <div class="budget-bar {{ 'over' if pct >= 100 else ('warn' if pct >= 80 else 'ok') }}" style="width:{{ pct }}%"></div>
+                    <div class="afford-result" id="affordResult">
+                        <div class="afford-goal-title" id="affordGoal"></div>
+                        <div class="afford-timeline">
+                            <div>
+                                <div class="afford-time-val" id="affordTime"></div>
+                                <div class="afford-time-label">at current savings rate</div>
+                            </div>
+                        </div>
+                        <div class="afford-plans-head">Ways to get there faster</div>
+                        <div id="affordPlans"></div>
                     </div>
-                    <div class="budget-pct {{ 'pct-over' if pct >= 100 else ('pct-warn' if pct >= 80 else 'pct-ok') }}">
-                        {{ "%.0f"|format(pct) }}% used{% if pct >= 100 %} — over budget{% endif %}
+                </div>
+
+                <div class="budget-block" style="grid-column: 1 / 3;">
+                    <div class="block-header">
+                        <span>Recurring expenses</span>
+                        <span style="font-size:11px;color:var(--text3)">expenses you add more than once</span>
+                    </div>
+                    {% if recurring_names %}
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;">
+                        {% for name in recurring_names %}
+                        <span style="padding:4px 10px;background:var(--accent-bg);border:1px solid var(--accent-border);border-radius:4px;font-size:12px;color:var(--accent);font-family:var(--mono)">↻ {{ name }}</span>
+                        {% endfor %}
                     </div>
                     {% else %}
-                    <div class="budget-bar-wrap"><div class="budget-bar ok" style="width:0%"></div></div>
-                    <div class="budget-pct pct-ok">No limit set</div>
+                    <div style="padding:12px 16px;font-size:12px;color:var(--text3)">No recurring expenses detected yet.</div>
                     {% endif %}
                 </div>
-                {% endfor %}
-            </div>
-            <form action="/set_budget" method="POST" class="budget-form">
-                <select name="category">
-                    <option>Food</option><option>Transport</option><option>Shopping</option><option>Health</option><option>Other</option>
-                </select>
-                <input type="number" name="limit" placeholder="₹ budget" style="width:90px">
-                <button type="submit" class="budget-submit">Set</button>
-            </form>
-        </div>
 
-        <!-- Can I afford it -->
-        <div class="afford-block">
-            <div class="block-header"><span>Can I afford it?</span></div>
-            <div class="afford-form">
-                <div class="afford-row">
-                    <input type="text" class="afford-input" id="affordName" placeholder="What do you want to buy?">
-                </div>
-                <div class="afford-row">
-                    <input type="number" class="afford-input" id="affordAmt" placeholder="₹ how much does it cost?">
-                    <button class="afford-btn" onclick="checkAfford()">Check</button>
-                </div>
-            </div>
-            <div class="afford-result" id="affordResult">
-                <div class="afford-goal-title" id="affordGoal"></div>
-                <div class="afford-timeline">
-                    <div>
-                        <div class="afford-time-val" id="affordTime"></div>
-                        <div class="afford-time-label">at current savings rate</div>
-                    </div>
-                </div>
-                <div class="afford-plans-head">Ways to get there faster</div>
-                <div id="affordPlans"></div>
             </div>
         </div>
-
-        <!-- Recurring expenses -->
-        <div class="budget-block" style="grid-column: 1 / 3;">
-            <div class="block-header">
-                <span>Recurring expenses</span>
-                <span style="font-size:11px;color:var(--text3)">expenses you add more than once</span>
-            </div>
-            {% if recurring_names %}
-            <div style="display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;">
-                {% for name in recurring_names %}
-                <span style="padding:4px 10px;background:var(--accent-bg);border:1px solid var(--accent-border);border-radius:4px;font-size:12px;color:var(--accent);font-family:var(--mono)">↻ {{ name }}</span>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div style="padding:12px 16px;font-size:12px;color:var(--text3)">No recurring expenses detected yet — they appear here when you add the same expense more than once.</div>
-            {% endif %}
-        </div>
-
-    </div>
-</div>
 
         <!-- ===== REPORTS ===== -->
-<div class="tab-panel" id="tab-reports">
-    <div class="reports-layout">
+        <div class="tab-panel" id="tab-reports">
+            <div class="reports-layout">
 
-        <div class="report-block">
-            <div class="block-header"><span>Biggest expense</span></div>
-            <div class="big-stat">
-                <div class="big-stat-val">₹{{ "%.0f"|format(biggest.amount if biggest else 0) }}</div>
-                <div class="big-stat-label">{{ biggest.name if biggest else 'No expenses yet' }}</div>
-                {% if biggest %}
-                <div class="big-stat-sub">
-                    <span class="badge badge-{{ biggest.category|lower }}">{{ biggest.category }}</span>
-                    <span style="margin-left:6px;font-size:11px;color:var(--text3);font-family:var(--mono)">{{ biggest.date.strftime('%d %b %Y') }}</span>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="report-block">
-            <div class="block-header"><span>Daily average</span></div>
-            <div class="big-stat">
-                <div class="big-stat-val">₹{{ "%.0f"|format(daily_avg) }}</div>
-                <div class="big-stat-label">per day this month</div>
-            </div>
-        </div>
-
-        <div class="report-block">
-            <div class="block-header"><span>Weekday vs weekend</span></div>
-            <div class="big-stat">
-                <div style="margin-bottom:14px">
-                    <div class="big-stat-label">Weekdays</div>
-                    <div style="font-family:var(--mono);font-size:22px;color:var(--accent)">₹{{ "%.0f"|format(weekday_total) }}</div>
-                </div>
-                <div>
-                    <div class="big-stat-label">Weekends</div>
-                    <div style="font-family:var(--mono);font-size:22px;color:var(--text2)">₹{{ "%.0f"|format(weekend_total) }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="report-block">
-            <div class="block-header"><span>Top 5 expenses</span></div>
-            <div class="report-list">
-                {% for expense in top_expenses %}
-                <div class="report-row">
-                    <div>
-                        <div style="font-size:12px;color:var(--text);font-weight:500">{{ expense.name }}</div>
-                        <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">{{ expense.date.strftime('%d %b %Y') }}</div>
+                <div class="report-block">
+                    <div class="block-header"><span>Biggest expense</span></div>
+                    <div class="big-stat">
+                        <div class="big-stat-val">₹{{ "%.0f"|format(biggest.amount if biggest else 0) }}</div>
+                        <div class="big-stat-label">{{ biggest.name if biggest else 'No expenses yet' }}</div>
+                        {% if biggest %}
+                        <div class="big-stat-sub">
+                            <span class="badge badge-{{ biggest.category|lower }}">{{ biggest.category }}</span>
+                            <span style="margin-left:6px;font-size:11px;color:var(--text3);font-family:var(--mono)">{{ biggest.date.strftime('%d %b %Y') }}</span>
+                        </div>
+                        {% endif %}
                     </div>
-                    <span class="report-value">₹{{ "%.2f"|format(expense.amount) }}</span>
                 </div>
-                {% endfor %}
-            </div>
-        </div>
 
-        <div class="report-block">
-            <div class="block-header"><span>Monthly spending</span></div>
-            <div style="padding:12px 16px;flex:1;display:flex;align-items:center;">
-                <canvas id="barChart" style="max-height:160px;width:100%"></canvas>
-            </div>
-        </div>
-
-        <div class="report-block">
-            <div class="block-header"><span>By category</span></div>
-            <div class="report-list">
-                {% for cat, amt in category_breakdown %}
-                <div class="report-row">
-                    <span class="badge badge-{{ cat|lower }}">{{ cat }}</span>
-                    <span class="report-value">₹{{ "%.2f"|format(amt) }}</span>
+                <div class="report-block">
+                    <div class="block-header"><span>Daily average</span></div>
+                    <div class="big-stat">
+                        <div class="big-stat-val">₹{{ "%.0f"|format(daily_avg) }}</div>
+                        <div class="big-stat-label">per day this month</div>
+                    </div>
                 </div>
-                {% endfor %}
+
+                <div class="report-block">
+                    <div class="block-header"><span>Weekday vs weekend</span></div>
+                    <div class="big-stat">
+                        <div style="margin-bottom:14px">
+                            <div class="big-stat-label">Weekdays</div>
+                            <div style="font-family:var(--mono);font-size:22px;color:var(--accent)">₹{{ "%.0f"|format(weekday_total) }}</div>
+                        </div>
+                        <div>
+                            <div class="big-stat-label">Weekends</div>
+                            <div style="font-family:var(--mono);font-size:22px;color:var(--text2)">₹{{ "%.0f"|format(weekend_total) }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-block">
+                    <div class="block-header"><span>Top 5 expenses</span></div>
+                    <div class="report-list">
+                        {% for expense in top_expenses %}
+                        <div class="report-row">
+                            <div>
+                                <div style="font-size:12px;color:var(--text);font-weight:500">{{ expense.name }}</div>
+                                <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">{{ expense.date.strftime('%d %b %Y') }}</div>
+                            </div>
+                            <span class="report-value">₹{{ "%.2f"|format(expense.amount) }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="report-block">
+                    <div class="block-header"><span>Monthly spending</span></div>
+                    <div style="padding:12px 16px;flex:1;display:flex;align-items:center;">
+                        <canvas id="barChart" style="max-height:160px;width:100%"></canvas>
+                    </div>
+                </div>
+
+                <div class="report-block">
+                    <div class="block-header"><span>By category</span></div>
+                    <div class="report-list">
+                        {% for cat, amt in category_breakdown %}
+                        <div class="report-row">
+                            <span class="badge badge-{{ cat|lower }}">{{ cat }}</span>
+                            <span class="report-value">₹{{ "%.2f"|format(amt) }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
             </div>
         </div>
 
-    </div>
-</div>
+        <!-- ===== ACCOUNTS ===== -->
+        <div class="tab-panel" id="tab-accounts">
+            <div class="expenses-layout">
+
+                <div class="exp-sidebar">
+                    <div class="block-header"><span>Add account</span></div>
+                    <form action="/accounts/add" method="POST" class="exp-form">
+                        <div class="field-group">
+                            <label class="field-lbl">Account name</label>
+                            <input type="text" name="name" class="field-input" placeholder="e.g. HDFC Savings" required>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-lbl">Current balance (₹)</label>
+                            <input type="number" name="balance" class="field-input" placeholder="e.g. 50000" step="0.01" required>
+                        </div>
+                        <button type="submit" class="add-btn">+ Add Account</button>
+                    </form>
+
+                    <div style="padding:16px;border-top:1px solid var(--border);margin-top:auto;">
+                        <div style="margin-bottom:12px;">
+                            <div class="field-lbl">Total balance</div>
+                            <div style="font-family:var(--mono);font-size:22px;color:var(--accent);margin-top:4px;">₹{{ "%.2f"|format(total_balance) }}</div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <div class="field-lbl">Total spent</div>
+                            <div style="font-family:var(--mono);font-size:22px;color:var(--danger);margin-top:4px;">- ₹{{ "%.2f"|format(total) }}</div>
+                        </div>
+                        <div style="height:1px;background:var(--border);margin:12px 0;"></div>
+                        <div>
+                            <div class="field-lbl">Remaining</div>
+                            <div style="font-family:var(--mono);font-size:26px;font-weight:600;margin-top:4px;color:{{ 'var(--accent)' if balance_after_spending >= 0 else 'var(--danger)' }}">
+                                ₹{{ "%.2f"|format(balance_after_spending) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="exp-main">
+                    <div class="block-header" style="padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">
+                        <span>Your accounts</span>
+                    </div>
+                    <div class="exp-table-wrap">
+                        {% if accounts %}
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Account</th>
+                                    <th style="text-align:right">Balance</th>
+                                    <th style="text-align:right">Update balance</th>
+                                    <th style="text-align:right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for account in accounts %}
+                                <tr>
+                                    <td class="td-name">{{ account.name }}</td>
+                                    <td class="td-amount">₹{{ "%.2f"|format(account.balance) }}</td>
+                                    <td style="text-align:right">
+                                        <form action="/accounts/update/{{ account.id }}" method="POST" style="display:inline-flex;gap:6px;justify-content:flex-end;">
+                                            <input type="number" name="balance" placeholder="New balance" step="0.01"
+                                                style="width:120px;padding:4px 8px;background:var(--panel2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px;font-family:var(--sans);">
+                                            <button type="submit" class="row-edit">Update</button>
+                                        </form>
+                                    </td>
+                                    <td class="td-actions">
+                                        <form action="/accounts/delete/{{ account.id }}" method="POST" style="display:inline">
+                                            <button type="submit" class="row-del">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="no-data">No accounts yet. Add your first account from the sidebar.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
 
     </div>
 </div>
@@ -422,7 +495,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Tab switching
 function switchTab(name, btn) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -430,7 +502,6 @@ function switchTab(name, btn) {
     btn.classList.add('active');
 }
 
-// Theme
 function toggleTheme() {
     const html = document.documentElement;
     const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -445,7 +516,6 @@ if (saved) {
     document.getElementById('themeBtn').textContent = saved === 'dark' ? '🌙' : '☀️';
 }
 
-// Auto-switch to tab from URL parameter
 const urlParams = new URLSearchParams(window.location.search);
 const tabParam = urlParams.get('tab');
 if (tabParam) {
@@ -453,7 +523,6 @@ if (tabParam) {
     if (tabBtn) switchTab(tabParam, tabBtn);
 }
 
-// Toast
 function showToast(msg) {
     const t = document.getElementById('toast');
     document.getElementById('toastMsg').textContent = msg;
@@ -461,7 +530,6 @@ function showToast(msg) {
     setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// Natural language parser
 function parseNL() {
     const input = document.getElementById('nlInput').value.trim().toLowerCase();
     if (!input) return;
@@ -487,52 +555,44 @@ function parseNL() {
     }
 
     let date = new Date();
-
-if (input.includes('yesterday')) {
-    date.setDate(date.getDate() - 1);
-} else {
-    // Match "on 19 march", "19 march", "march 19", "19/3", "19-3"
-    const months = ['january','february','march','april','may','june','july','august','september','october','november','december'];
-    
-    // "on 19 march" or "19 march" or "march 19"
-    const monthNames = 'january|february|march|april|may|june|july|august|september|october|november|december';
-const shortMonths = 'jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec';
-const allMonths = monthNames + '|' + shortMonths;
-
-const monthMatch = input.match(new RegExp('(\\d{1,2})\\s+(' + allMonths + ')', 'i'))
-                || input.match(new RegExp('(' + allMonths + ')\\s+(\\d{1,2})', 'i'));
-    if (monthMatch) {
-    const fullMonths = ['january','february','march','april','may','june','july','august','september','october','november','december'];
-    const shortMonthList = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-    
-    const day = parseInt(monthMatch[1]) || parseInt(monthMatch[2]);
-    const monthName = (monthMatch[2] || monthMatch[1]).toLowerCase();
-    
-    let monthIndex = fullMonths.indexOf(monthName);
-    if (monthIndex === -1) monthIndex = shortMonthList.indexOf(monthName);
-    
-    if (monthIndex !== -1 && day >= 1 && day <= 31) {
-        date.setMonth(monthIndex);
-        date.setDate(day);
+    if (input.includes('yesterday')) {
+        date.setDate(date.getDate() - 1);
+    } else {
+        const monthNames = 'january|february|march|april|may|june|july|august|september|october|november|december';
+        const shortMonths = 'jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec';
+        const allMonths = monthNames + '|' + shortMonths;
+        const monthMatch = input.match(new RegExp('(\\d{1,2})\\s+(' + allMonths + ')', 'i'))
+                        || input.match(new RegExp('(' + allMonths + ')\\s+(\\d{1,2})', 'i'));
+        if (monthMatch) {
+            const fullMonths = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+            const shortMonthList = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+            const day = parseInt(monthMatch[1]) || parseInt(monthMatch[2]);
+            const monthName = (monthMatch[2] || monthMatch[1]).toLowerCase();
+            let monthIndex = fullMonths.indexOf(monthName);
+            if (monthIndex === -1) monthIndex = shortMonthList.indexOf(monthName);
+            if (monthIndex !== -1 && day >= 1 && day <= 31) {
+                date.setMonth(monthIndex);
+                date.setDate(day);
+            }
+        }
+        const numericMatch = input.match(/(\d{1,2})[\/\-](\d{1,2})/);
+        if (numericMatch && !monthMatch) {
+            date.setDate(parseInt(numericMatch[1]));
+            date.setMonth(parseInt(numericMatch[2]) - 1);
+        }
     }
-}
-    
-    // "19/3" or "19-3"
-    const numericMatch = input.match(/(\d{1,2})[\/\-](\d{1,2})/);
-    if (numericMatch && !monthMatch) {
-        date.setDate(parseInt(numericMatch[1]));
-        date.setMonth(parseInt(numericMatch[2]) - 1);
+
+    const dateStr = date.toISOString().split('T')[0];
+
+    if (!name || !amount) {
+        showToast('Could not parse — try "lunch 80 today"');
+        return;
     }
-}
 
-const dateStr = date.toISOString().split('T')[0];
-
-    // Submit directly without switching tabs
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = '/add';
     form.style.display = 'none';
-
     const fields = { name, amount, category, date: dateStr };
     for (const [key, val] of Object.entries(fields)) {
         const inp = document.createElement('input');
@@ -540,7 +600,6 @@ const dateStr = date.toISOString().split('T')[0];
         inp.value = val;
         form.appendChild(inp);
     }
-
     document.getElementById('nlInput').value = '';
     document.body.appendChild(form);
     form.submit();
@@ -548,7 +607,6 @@ const dateStr = date.toISOString().split('T')[0];
 
 document.getElementById('nlInput').addEventListener('keydown', e => { if (e.key === 'Enter') parseNL(); });
 
-// Can I afford it
 const budgetData = {{ budget_data | tojson }};
 
 function checkAfford() {
@@ -558,14 +616,10 @@ function checkAfford() {
 
     let monthlySurplus = 0;
     budgetData.forEach(cat => {
-        if (cat.limit > 0 && cat.limit > cat.spent) {
-            monthlySurplus += cat.limit - cat.spent;
-        }
+        if (cat.limit > 0 && cat.limit > cat.spent) monthlySurplus += cat.limit - cat.spent;
     });
 
-    const result = document.getElementById('affordResult');
     document.getElementById('affordGoal').textContent = `Goal: ${name} — ₹${amt.toFixed(0)}`;
-
     if (monthlySurplus > 0) {
         const months = amt / monthlySurplus;
         document.getElementById('affordTime').textContent = months < 1 ? `${Math.ceil(months * 30)} days` : `${months.toFixed(1)} months`;
@@ -575,7 +629,6 @@ function checkAfford() {
 
     const plansEl = document.getElementById('affordPlans');
     plansEl.innerHTML = '';
-
     budgetData.filter(c => c.spent > 0).slice(0, 3).forEach(cat => {
         [0.1, 0.2, 0.3].forEach(cut => {
             const saving = cat.spent * cut;
@@ -594,21 +647,17 @@ function checkAfford() {
     if (!plansEl.innerHTML) {
         plansEl.innerHTML = `<div class="afford-plan-row"><span class="afford-plan-desc">Set category budgets to see personalised saving plans</span></div>`;
     }
-
-    result.classList.add('show');
+    document.getElementById('affordResult').classList.add('show');
 }
 
-// Charts
 {% if expenses %}
 const catNames = {{ categories | tojson }};
 const catTotals = {{ category_totals | tojson }};
 const labels = [], data = [], colors = [];
 const palette = ['#c8924a','#6aabcf','#b87fc8','#6ab87a','#909090'];
-
 catNames.forEach((cat, i) => {
     if (catTotals[i] > 0) { labels.push(cat); data.push(catTotals[i]); colors.push(palette[i]); }
 });
-
 new Chart(document.getElementById('expenseChart').getContext('2d'), {
     type: 'doughnut',
     data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 3 }] },
@@ -625,7 +674,6 @@ new Chart(document.getElementById('expenseChart').getContext('2d'), {
 {% if monthly_totals %}
 const mLabels = {{ monthly_totals | map(attribute=0) | list | tojson }};
 const mVals = {{ monthly_totals | map(attribute=1) | list | tojson }};
-
 new Chart(document.getElementById('barChart').getContext('2d'), {
     type: 'bar',
     data: {
