@@ -306,5 +306,11 @@ def export_csv():
 with app.app_context():
     db.create_all()
 
+@app.route('/reset-db-now')
+def reset_db():
+    db.drop_all()
+    db.create_all()
+    return 'Database reset successfully!'
+
 if __name__ == '__main__':
     app.run(debug=True)
