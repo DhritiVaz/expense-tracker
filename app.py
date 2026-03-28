@@ -215,8 +215,13 @@ def index():
 
     monthly_totals = []
     for i in range(5, -1, -1):
-        m = (today.month - i - 1) % 12 + 1
-        y = today.year - ((i - today.month + 1) // 12 + (1 if (today.month - i - 1) < 0 else 0))
+        month_date = date(today.year, today.month, 1)
+        # Go back i months
+        m = today.month - i
+        y = today.year
+        while m <= 0:
+            m += 12
+            y -= 1
         mt = sum(e.amount for e in all_expenses if e.date.month == m and e.date.year == y)
         if mt > 0:
             monthly_totals.append((calendar.month_abbr[m] + f' {y}', mt))
@@ -225,11 +230,16 @@ def index():
     daily_avg = this_m / days_in_month if days_in_month > 0 else 0
     weekday_total = sum(e.amount for e in all_expenses if e.date.weekday() < 5)
     weekend_total = sum(e.amount for e in all_expenses if e.date.weekday() >= 5)
+    # Day of week totals (0=Monday, 6=Sunday)
+    day_names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    day_totals = [sum(e.amount for e in all_expenses if e.date.weekday() == i) for i in range(7)]
     accounts = Account.query.filter_by(user_id=current_user.id).all()
     total_balance = sum(a.balance for a in accounts)
     balance_after_spending = total_balance - total
 
     return render_template('index.html',
+        day_names=day_names,
+        day_totals=day_totals,
         accounts=accounts,
         total_balance=total_balance,
         balance_after_spending=balance_after_spending,

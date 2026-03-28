@@ -9,7 +9,6 @@
 <body>
 <div class="app">
 
-    <!-- TOP BAR -->
     <div class="topbar">
         <div class="topbar-left">
             <div class="app-icon">₹</div>
@@ -24,7 +23,6 @@
         </div>
     </div>
 
-    <!-- NL BAR -->
     <div class="nlbar">
         <span class="nl-label">Quick add</span>
         <input type="text" class="nl-input" id="nlInput" placeholder='e.g. "coffee 80 today" or "auto 150 19 mar"'>
@@ -32,42 +30,34 @@
         <span class="nl-hint">e.g. <span>"lunch 80 today"</span> or <span>"auto 150 19 mar"</span> — adds instantly</span>
     </div>
 
-    <!-- TAB BAR -->
     <div class="tabbar">
         <button class="tab active" onclick="switchTab('overview', this)">Overview</button>
-        <button class="tab" onclick="switchTab('expenses', this)">
-            Expenses <span class="tab-count">{{ expenses|length }}</span>
-        </button>
+        <button class="tab" onclick="switchTab('expenses', this)">Expenses <span class="tab-count">{{ expenses|length }}</span></button>
         <button class="tab" onclick="switchTab('budget', this)">Budget</button>
         <button class="tab" onclick="switchTab('reports', this)">Reports</button>
         <button class="tab" onclick="switchTab('accounts', this)">Accounts</button>
     </div>
 
-    <!-- CONTENT -->
     <div class="content">
 
-        <!-- ===== OVERVIEW ===== -->
+        <!-- OVERVIEW -->
         <div class="tab-panel active" id="tab-overview">
             <div class="overview-grid">
-
                 <div class="stat-block accent-left">
                     <div class="stat-key">Total spent</div>
                     <div class="stat-val">₹{{ "%.0f"|format(total) }}</div>
                     <div class="stat-sub">{{ expenses|length }} transactions</div>
                 </div>
-
                 <div class="stat-block accent-left">
                     <div class="stat-key">Average</div>
                     <div class="stat-val">₹{{ "%.0f"|format(total / expenses|length if expenses else 0) }}</div>
                     <div class="stat-sub">per expense</div>
                 </div>
-
                 <div class="stat-block accent-left">
                     <div class="stat-key">Biggest expense</div>
                     <div class="stat-val">₹{{ "%.0f"|format(biggest.amount if biggest else 0) }}</div>
                     <div class="stat-sub">{{ biggest.name if biggest else '—' }}</div>
                 </div>
-
                 <div class="insight-block">
                     <div class="block-header"><span>Overview</span></div>
                     <div class="block-body">
@@ -92,7 +82,6 @@
                         {% endfor %}
                     </div>
                 </div>
-
                 <div class="chart-block">
                     <div class="block-header"><span>By category</span></div>
                     <div class="chart-inner">
@@ -103,36 +92,26 @@
                         {% endif %}
                     </div>
                 </div>
-
                 <div class="compare-block">
                     <div class="block-header">
                         <span>Monthly comparison</span>
-                        {% if monthly_diff > 0 %}
-                        <span class="compare-diff diff-up">+₹{{ "%.0f"|format(monthly_diff) }}</span>
-                        {% elif monthly_diff < 0 %}
-                        <span class="compare-diff diff-down">-₹{{ "%.0f"|format(monthly_diff|abs) }}</span>
-                        {% else %}
-                        <span class="compare-diff diff-same">no change</span>
-                        {% endif %}
+                        {% if monthly_diff > 0 %}<span class="compare-diff diff-up">+₹{{ "%.0f"|format(monthly_diff) }}</span>
+                        {% elif monthly_diff < 0 %}<span class="compare-diff diff-down">-₹{{ "%.0f"|format(monthly_diff|abs) }}</span>
+                        {% else %}<span class="compare-diff diff-same">no change</span>{% endif %}
                     </div>
                     <div class="compare-inner">
                         <div class="compare-month">
                             <div class="compare-label">This month</div>
-                            <div class="compare-bar-wrap">
-                                <div class="compare-bar" style="width:{{ this_month_pct }}%"></div>
-                            </div>
+                            <div class="compare-bar-wrap"><div class="compare-bar" style="width:{{ this_month_pct }}%"></div></div>
                             <div class="compare-val">₹{{ "%.2f"|format(this_month_total) }}</div>
                         </div>
                         <div class="compare-month">
                             <div class="compare-label">Last month</div>
-                            <div class="compare-bar-wrap">
-                                <div class="compare-bar prev" style="width:{{ last_month_pct }}%"></div>
-                            </div>
+                            <div class="compare-bar-wrap"><div class="compare-bar prev" style="width:{{ last_month_pct }}%"></div></div>
                             <div class="compare-val">₹{{ "%.2f"|format(last_month_total) }}</div>
                         </div>
                     </div>
                 </div>
-
                 <div class="activity-block">
                     <div class="block-header"><span>Recent activity</span></div>
                     <div class="block-body">
@@ -152,11 +131,10 @@
                         {% endfor %}
                     </div>
                 </div>
-
             </div>
         </div>
 
-        <!-- ===== EXPENSES ===== -->
+        <!-- EXPENSES -->
         <div class="tab-panel" id="tab-expenses">
             <div class="expenses-layout">
                 <div class="exp-sidebar">
@@ -201,9 +179,7 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Category</th>
-                                    <th>Date</th>
+                                    <th>Name</th><th>Category</th><th>Date</th>
                                     <th style="text-align:right">Amount</th>
                                     <th style="text-align:right">Actions</th>
                                 </tr>
@@ -213,9 +189,7 @@
                                 <tr>
                                     <td class="td-name">
                                         {{ expense.name }}
-                                        {% if expense.name.lower() in recurring_names %}
-                                        <span class="recurring-tag">↻</span>
-                                        {% endif %}
+                                        {% if expense.name.lower() in recurring_names %}<span class="recurring-tag">↻</span>{% endif %}
                                     </td>
                                     <td><span class="badge badge-{{ expense.category|lower }}">{{ expense.category }}</span></td>
                                     <td class="td-date">{{ expense.date.strftime('%d %b %Y') }}</td>
@@ -238,10 +212,9 @@
             </div>
         </div>
 
-        <!-- ===== BUDGET ===== -->
+        <!-- BUDGET -->
         <div class="tab-panel" id="tab-budget">
             <div class="budget-layout">
-
                 <div class="budget-block">
                     <div class="block-header"><span>Category budgets</span></div>
                     <div class="budget-list">
@@ -281,7 +254,6 @@
                         <button type="submit" class="budget-submit">Set</button>
                     </form>
                 </div>
-
                 <div class="afford-block">
                     <div class="block-header"><span>Can I afford it?</span></div>
                     <div class="afford-form">
@@ -305,7 +277,6 @@
                         <div id="affordPlans"></div>
                     </div>
                 </div>
-
                 <div class="budget-block" style="grid-column: 1 / 3;">
                     <div class="block-header">
                         <span>Recurring expenses</span>
@@ -321,50 +292,46 @@
                     <div style="padding:12px 16px;font-size:12px;color:var(--text3)">No recurring expenses detected yet.</div>
                     {% endif %}
                 </div>
-
             </div>
         </div>
 
-        <!-- ===== REPORTS ===== -->
+        <!-- REPORTS -->
         <div class="tab-panel" id="tab-reports">
             <div class="reports-layout">
 
+                <!-- Row 1 -->
                 <div class="report-block">
                     <div class="block-header"><span>Biggest expense</span></div>
-                    <div class="big-stat">
-                        <div class="big-stat-val">₹{{ "%.0f"|format(biggest.amount if biggest else 0) }}</div>
-                        <div class="big-stat-label">{{ biggest.name if biggest else 'No expenses yet' }}</div>
-                        {% if biggest %}
-                        <div class="big-stat-sub">
-                            <span class="badge badge-{{ biggest.category|lower }}">{{ biggest.category }}</span>
-                            <span style="margin-left:6px;font-size:11px;color:var(--text3);font-family:var(--mono)">{{ biggest.date.strftime('%d %b %Y') }}</span>
-                        </div>
-                        {% endif %}
+                    <div style="padding:12px 16px;">
+                        <div style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--accent);">₹{{ "%.0f"|format(biggest.amount if biggest else 0) }}</div>
+                        <div style="font-size:11px;color:var(--text3);margin-top:2px;">{{ biggest.name if biggest else '—' }}</div>
+                        {% if biggest %}<div style="margin-top:3px;"><span class="badge badge-{{ biggest.category|lower }}">{{ biggest.category }}</span></div>{% endif %}
                     </div>
                 </div>
 
                 <div class="report-block">
                     <div class="block-header"><span>Daily average</span></div>
-                    <div class="big-stat">
-                        <div class="big-stat-val">₹{{ "%.0f"|format(daily_avg) }}</div>
-                        <div class="big-stat-label">per day this month</div>
+                    <div style="padding:12px 16px;">
+                        <div style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--accent);">₹{{ "%.0f"|format(daily_avg) }}</div>
+                        <div style="font-size:11px;color:var(--text3);margin-top:2px;">per day this month</div>
                     </div>
                 </div>
 
                 <div class="report-block">
                     <div class="block-header"><span>Weekday vs weekend</span></div>
-                    <div class="big-stat">
-                        <div style="margin-bottom:14px">
-                            <div class="big-stat-label">Weekdays</div>
-                            <div style="font-family:var(--mono);font-size:22px;color:var(--accent)">₹{{ "%.0f"|format(weekday_total) }}</div>
+                    <div style="padding:12px 16px;display:flex;gap:32px;">
+                        <div>
+                            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;">Weekdays</div>
+                            <div style="font-family:var(--mono);font-size:16px;color:var(--accent);margin-top:2px;">₹{{ "%.0f"|format(weekday_total) }}</div>
                         </div>
                         <div>
-                            <div class="big-stat-label">Weekends</div>
-                            <div style="font-family:var(--mono);font-size:22px;color:var(--text2)">₹{{ "%.0f"|format(weekend_total) }}</div>
+                            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;">Weekends</div>
+                            <div style="font-family:var(--mono);font-size:16px;color:var(--text2);margin-top:2px;">₹{{ "%.0f"|format(weekend_total) }}</div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Row 2 -->
                 <div class="report-block">
                     <div class="block-header"><span>Top 5 expenses</span></div>
                     <div class="report-list">
@@ -380,14 +347,7 @@
                     </div>
                 </div>
 
-                <div class="report-block">
-                    <div class="block-header"><span>Monthly spending</span></div>
-                    <div style="padding:12px 16px;flex:1;display:flex;align-items:center;">
-                        <canvas id="barChart" style="max-height:160px;width:100%"></canvas>
-                    </div>
-                </div>
-
-                <div class="report-block">
+                <div class="report-block" style="grid-column: 2 / 4;">
                     <div class="block-header"><span>By category</span></div>
                     <div class="report-list">
                         {% for cat, amt in category_breakdown %}
@@ -399,13 +359,27 @@
                     </div>
                 </div>
 
+                <!-- Row 3 -->
+                <div class="report-block">
+                    <div class="block-header"><span>Monthly spending</span></div>
+                    <div style="padding:8px 12px;position:relative;height:calc(100% - 33px);">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="report-block" style="grid-column: 2 / 4;">
+                    <div class="block-header"><span>Spending by day of week</span></div>
+                    <div style="padding:8px 12px;position:relative;height:calc(100% - 33px);">
+                        <canvas id="dayChart"></canvas>
+                    </div>
+                </div>
+
             </div>
         </div>
 
-        <!-- ===== ACCOUNTS ===== -->
+        <!-- ACCOUNTS -->
         <div class="tab-panel" id="tab-accounts">
             <div class="expenses-layout">
-
                 <div class="exp-sidebar">
                     <div class="block-header"><span>Add account</span></div>
                     <form action="/accounts/add" method="POST" class="exp-form">
@@ -419,7 +393,6 @@
                         </div>
                         <button type="submit" class="add-btn">+ Add Account</button>
                     </form>
-
                     <div style="padding:16px;border-top:1px solid var(--border);margin-top:auto;">
                         <div style="margin-bottom:12px;">
                             <div class="field-lbl">Total balance</div>
@@ -438,7 +411,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="exp-main">
                     <div class="block-header" style="padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">
                         <span>Your accounts</span>
@@ -480,14 +452,12 @@
                         {% endif %}
                     </div>
                 </div>
-
             </div>
         </div>
 
     </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast">
     <div class="toast-dot"></div>
     <span id="toastMsg">Done</span>
@@ -533,27 +503,22 @@ function showToast(msg) {
 function parseNL() {
     const input = document.getElementById('nlInput').value.trim().toLowerCase();
     if (!input) return;
-
     const catKeywords = {
         Food: ['food','lunch','dinner','breakfast','coffee','tea','snack','cafe','pizza','burger','biryani','chai','meal','gazebo','swiggy','zomato','restaurant','eat','dine'],
         Transport: ['auto','uber','ola','bus','train','metro','cab','taxi','petrol','fuel','transport','travel','rickshaw','rapido'],
         Shopping: ['shop','shopping','amazon','flipkart','clothes','shirt','shoes','bag','bought','purchase','mall','myntra'],
         Health: ['medicine','doctor','hospital','pharmacy','gym','medical','health','clinic','tablet','vitamins'],
     };
-
     const amountMatch = input.match(/\d+(\.\d+)?/);
     const amount = amountMatch ? amountMatch[0] : '';
-
     const timeWords = ['today','yesterday','tomorrow','monday','tuesday','wednesday','thursday','friday','saturday','sunday','this','last','week'];
     const stopWords = [...timeWords, 'on', 'at', 'for', 'the', 'a', 'an', 'in', 'spent', 'spend', 'bought', 'paid', 'rs', '₹'];
     const words = input.split(/\s+/).filter(w => !w.match(/^\d+(\.\d+)?$/) && !stopWords.includes(w));
     const name = words.length > 0 ? words[0].charAt(0).toUpperCase() + words[0].slice(1) : '';
-
     let category = 'Other';
     for (const [cat, keywords] of Object.entries(catKeywords)) {
         if (keywords.some(k => input.includes(k))) { category = cat; break; }
     }
-
     let date = new Date();
     if (input.includes('yesterday')) {
         date.setDate(date.getDate() - 1);
@@ -581,14 +546,8 @@ function parseNL() {
             date.setMonth(parseInt(numericMatch[2]) - 1);
         }
     }
-
     const dateStr = date.toISOString().split('T')[0];
-
-    if (!name || !amount) {
-        showToast('Could not parse — try "lunch 80 today"');
-        return;
-    }
-
+    if (!name || !amount) { showToast('Could not parse — try "lunch 80 today"'); return; }
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = '/add';
@@ -596,8 +555,7 @@ function parseNL() {
     const fields = { name, amount, category, date: dateStr };
     for (const [key, val] of Object.entries(fields)) {
         const inp = document.createElement('input');
-        inp.name = key;
-        inp.value = val;
+        inp.name = key; inp.value = val;
         form.appendChild(inp);
     }
     document.getElementById('nlInput').value = '';
@@ -613,12 +571,10 @@ function checkAfford() {
     const name = document.getElementById('affordName').value || 'this item';
     const amt = parseFloat(document.getElementById('affordAmt').value);
     if (!amt || amt <= 0) { showToast('Enter an amount first'); return; }
-
     let monthlySurplus = 0;
     budgetData.forEach(cat => {
         if (cat.limit > 0 && cat.limit > cat.spent) monthlySurplus += cat.limit - cat.spent;
     });
-
     document.getElementById('affordGoal').textContent = `Goal: ${name} — ₹${amt.toFixed(0)}`;
     if (monthlySurplus > 0) {
         const months = amt / monthlySurplus;
@@ -626,7 +582,6 @@ function checkAfford() {
     } else {
         document.getElementById('affordTime').textContent = 'Set budgets to calculate';
     }
-
     const plansEl = document.getElementById('affordPlans');
     plansEl.innerHTML = '';
     budgetData.filter(c => c.spent > 0).slice(0, 3).forEach(cat => {
@@ -636,14 +591,10 @@ function checkAfford() {
             if (total > 0) {
                 const months = amt / total;
                 const timeStr = months < 1 ? `${Math.ceil(months * 30)} days` : `${months.toFixed(1)} months`;
-                plansEl.innerHTML += `<div class="afford-plan-row">
-                    <span class="afford-plan-desc">Cut ${cat.name} by ${(cut*100).toFixed(0)}% (save ₹${saving.toFixed(0)}/mo)</span>
-                    <span class="afford-plan-time">${timeStr}</span>
-                </div>`;
+                plansEl.innerHTML += `<div class="afford-plan-row"><span class="afford-plan-desc">Cut ${cat.name} by ${(cut*100).toFixed(0)}% (save ₹${saving.toFixed(0)}/mo)</span><span class="afford-plan-time">${timeStr}</span></div>`;
             }
         });
     });
-
     if (!plansEl.innerHTML) {
         plansEl.innerHTML = `<div class="afford-plan-row"><span class="afford-plan-desc">Set category budgets to see personalised saving plans</span></div>`;
     }
@@ -676,12 +627,9 @@ const mLabels = {{ monthly_totals | map(attribute=0) | list | tojson }};
 const mVals = {{ monthly_totals | map(attribute=1) | list | tojson }};
 new Chart(document.getElementById('barChart').getContext('2d'), {
     type: 'bar',
-    data: {
-        labels: mLabels,
-        datasets: [{ data: mVals, backgroundColor: 'rgba(163,184,75,0.2)', borderColor: '#a3b84b', borderWidth: 1, borderRadius: 3 }]
-    },
+    data: { labels: mLabels, datasets: [{ data: mVals, backgroundColor: 'rgba(163,184,75,0.2)', borderColor: '#a3b84b', borderWidth: 1, borderRadius: 3 }] },
     options: {
-        responsive: true,
+        responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
             x: { grid: { color: '#2a2a2a' }, ticks: { color: '#555', font: { family: 'JetBrains Mono', size: 11 } } },
@@ -690,6 +638,23 @@ new Chart(document.getElementById('barChart').getContext('2d'), {
     }
 });
 {% endif %}
+
+const dayLabels = {{ day_names | tojson }};
+const dayVals = {{ day_totals | tojson }};
+const dayColors = dayLabels.map((d, i) => i >= 5 ? 'rgba(205,92,92,0.3)' : 'rgba(163,184,75,0.2)');
+const dayBorders = dayLabels.map((d, i) => i >= 5 ? '#cd5c5c' : '#a3b84b');
+new Chart(document.getElementById('dayChart').getContext('2d'), {
+    type: 'bar',
+    data: { labels: dayLabels, datasets: [{ data: dayVals, backgroundColor: dayColors, borderColor: dayBorders, borderWidth: 1, borderRadius: 3 }] },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { color: '#2a2a2a' }, ticks: { color: '#555', font: { family: 'JetBrains Mono', size: 11 } } },
+            y: { grid: { color: '#2a2a2a' }, ticks: { color: '#555', font: { family: 'JetBrains Mono', size: 11 }, callback: v => '₹' + v } }
+        }
+    }
+});
 </script>
 </body>
 </html>
