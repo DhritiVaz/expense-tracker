@@ -3,21 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Expense</title>
+    <title>Edit Transaction</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 <div class="header">
     <div class="header-logo">
         <div class="logo-mark">₹</div>
-        <h1>Edit Expense</h1>
+        <h1>Edit Transaction</h1>
     </div>
 </div>
 
 <div style="max-width:480px; margin: 40px auto; padding: 0 20px;">
     <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px;">
-        <div class="section-label" style="margin-bottom:20px;">Edit expense</div>
+        <div class="section-label" style="margin-bottom:20px;">Edit transaction</div>
         <form action="/edit/{{ expense.id }}" method="POST" class="add-form">
+
+            <div style="margin-bottom:12px;">
+                <label class="field-label" style="display:block;margin-bottom:6px;">Type</label>
+                <div style="display:flex;gap:12px;">
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+                        <input type="radio" name="type" value="expense" {% if expense.type == 'expense' %}checked{% endif %} onchange="toggleType(this.value)">
+                        <span style="color:var(--danger)">Expense</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+                        <input type="radio" name="type" value="income" {% if expense.type == 'income' %}checked{% endif %} onchange="toggleType(this.value)">
+                        <span style="color:var(--success)">Income</span>
+                    </label>
+                </div>
+            </div>
+
             <div>
                 <label class="field-label">Name</label>
                 <input type="text" name="name" value="{{ expense.name }}" required>
@@ -26,11 +41,19 @@
                 <label class="field-label">Amount (₹)</label>
                 <input type="number" name="amount" value="{{ expense.amount }}" step="0.01" required>
             </div>
-            <div>
+            <div id="expense-cats" style="display:{{ 'none' if expense.type == 'income' else 'block' }}">
                 <label class="field-label">Category</label>
-                <select name="category">
+                <select name="category" id="exp-cat-select">
                     {% for cat in ['Food', 'Transport', 'Shopping', 'Health', 'Other'] %}
-                    <option {% if expense.category == cat %}selected{% endif %}>{{ cat }}</option>
+                    <option {% if expense.type == 'expense' and expense.category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div id="income-cats" style="display:{{ 'block' if expense.type == 'income' else 'none' }}">
+                <label class="field-label">Category</label>
+                <select name="category" id="inc-cat-select">
+                    {% for cat in ['Salary', 'Freelance', 'Gift', 'Investment', 'Other'] %}
+                    <option {% if expense.type == 'income' and expense.category == cat %}selected{% endif %}>{{ cat }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -45,5 +68,27 @@
         </form>
     </div>
 </div>
+
+<script>
+function toggleType(type) {
+    const expDiv = document.getElementById('expense-cats');
+    const incDiv = document.getElementById('income-cats');
+    const expSel = document.getElementById('exp-cat-select');
+    const incSel = document.getElementById('inc-cat-select');
+    if (type === 'income') {
+        expDiv.style.display = 'none';
+        incDiv.style.display = 'block';
+        expSel.removeAttribute('name');
+        incSel.setAttribute('name', 'category');
+    } else {
+        expDiv.style.display = 'block';
+        incDiv.style.display = 'none';
+        incSel.removeAttribute('name');
+        expSel.setAttribute('name', 'category');
+    }
+}
+// Ensure correct select has name on load
+toggleType(document.querySelector('input[name="type"]:checked').value);
+</script>
 </body>
 </html>

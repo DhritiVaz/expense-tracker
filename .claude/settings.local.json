@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ':*)",
+      "Bash(.venv/Scripts/python -c ':*)",
+      "Bash(.venv/Scripts/python app.py)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/login)",
+      "Bash(curl -s http://localhost:5000/login)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /F /PID 13424)",
+      "Bash(taskkill /F /PID 25240)",
+      "Bash(taskkill /F /PID 23588)",
+      "Bash(taskkill /F /PID 18640)",
+      "Bash(tasklist /FI \"PID eq 13424\")",
+      "Bash(wmic process:*)",
+      "Bash(powershell -Command \"Get-Process -Id 13424 | Select-Object Name, Path\")",
+      "Bash(curl -s http://localhost:5001/login)",
+      "Bash(.venv/Scripts/pip install:*)",
+      "Bash(.venv/Scripts/pip.exe install:*)",
+      "Bash(.venv/Scripts/python.exe -m pip install pdfplumber)",
+      "Bash(.venv/Scripts/python.exe -m pip freeze)"
+    ]
+  }
+}

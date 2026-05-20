@@ -16,6 +16,9 @@
     --warning: #d4a843;
     --warning-bg: rgba(212,168,67,0.08);
     --success: #6aaa6a;
+    --income: #6aaa6a;
+    --income-bg: rgba(106,170,106,0.08);
+    --income-border: rgba(106,170,106,0.2);
     --text: #e0e0e0;
     --text2: #999999;
     --text3: #555555;
@@ -34,6 +37,9 @@
     --accent2: #4a6818;
     --accent-bg: rgba(90,122,30,0.1);
     --accent-border: rgba(90,122,30,0.25);
+    --income: #3d8b3d;
+    --income-bg: rgba(61,139,61,0.1);
+    --income-border: rgba(61,139,61,0.25);
     --text: #1a1a18;
     --text2: #4a4a48;
     --text3: #8a8a88;
@@ -743,7 +749,7 @@ tbody td { padding: 9px 14px; font-size: 12px; vertical-align: middle; }
 .reports-layout {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 90px 1fr 1fr;
+    grid-template-rows: 90px 180px 1fr;
     gap: 1px;
     height: 100%;
     background: var(--border);
@@ -909,3 +915,40 @@ tbody td { padding: 9px 14px; font-size: 12px; vertical-align: middle; }
     .overview-grid { grid-template-columns: 1fr; }
     .insight-block, .chart-block, .activity-block, .compare-block { grid-column: 1; }
 }
+
+/* ===== INCOME ===== */
+.income-val { color: var(--income) !important; }
+.expense-val { color: var(--danger) !important; }
+
+.accent-left-danger { border-left: 2px solid var(--danger); }
+
+.income-header { border-bottom-color: var(--income-border) !important; }
+.income-btn { background: var(--income) !important; }
+.income-btn:hover { background: #5a9a5a !important; }
+
+.income-count { background: var(--income-bg) !important; color: var(--income) !important; }
+
+/* Income type badge in activity feed */
+.badge-type-income {
+    background: var(--income-bg);
+    color: var(--income);
+    border: 1px solid var(--income-border);
+}
+.badge-type-expense {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid rgba(205,92,92,0.2);
+}
+
+/* Income category badge */
+.badge-income-cat {
+    background: var(--income-bg);
+    color: var(--income);
+    border: 1px solid var(--income-border);
+}
+
+/* Salary / Freelance / Gift / Investment badges */
+.badge-salary { background: rgba(106,170,106,0.15); color: #6aaa6a; border: 1px solid rgba(106,170,106,0.25); }
+.badge-freelance { background: rgba(80,150,200,0.15); color: #6aabcf; border: 1px solid rgba(80,150,200,0.25); }
+.badge-gift { background: rgba(180,100,160,0.15); color: #c87ab8; border: 1px solid rgba(180,100,160,0.25); }
+.badge-investment { background: rgba(212,168,67,0.15); color: #d4a843; border: 1px solid rgba(212,168,67,0.25); }
