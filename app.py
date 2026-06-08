@@ -6,6 +6,12 @@ from datetime import date, datetime, timedelta
 from collections import defaultdict
 import os, calendar, csv, io
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
@@ -416,16 +422,19 @@ def set_default_account(id):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        if User.query.filter_by(email=email).first():
-            return render_template('register.html', error='Email already registered')
-        user = User(name=name, email=email, password=generate_password_hash(password, method='pbkdf2:sha256'))
-        db.session.add(user)
-        db.session.commit()
-        login_user(user)
-        return redirect('/')
+        try:
+            name = request.form.get('name')
+            email = request.form.get('email')
+            password = request.form.get('password')
+            if User.query.filter_by(email=email).first():
+                return render_template('register.html', error='Email already registered')
+            user = User(name=name, email=email, password=generate_password_hash(password, method='pbkdf2:sha256'))
+            db.session.add(user)
+            db.session.commit()
+            login_user(user)
+            return redirect('/')
+        except Exception as e:
+            return f"Register error: {str(e)}", 500
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
