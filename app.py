@@ -137,6 +137,13 @@ def get_personality(expenses):
 
 # ===== ROUTES =====
 
+@app.route('/debug')
+def debug():
+    import sys
+    db_url = os.environ.get('DATABASE_URL', 'NOT SET')
+    safe_url = db_url[:30] + '...' if len(db_url) > 30 else db_url
+    return f"Python: {sys.version}<br>DATABASE_URL starts with: {safe_url}<br>SECRET_KEY set: {bool(os.environ.get('SECRET_KEY'))}"
+
 @app.route('/', methods=['GET'])
 @login_required
 def index():
