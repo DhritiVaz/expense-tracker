@@ -1,69 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Transaction</title>
+    <title>Edit Transaction — Expense Tracker</title>
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
+    <style>
+        html, body { overflow: auto; height: auto; }
+        .edit-page { max-width: 440px; margin: 40px auto; padding: 0 20px 60px; }
+        .edit-back { display: inline-block; margin-bottom: 16px; font-size: 12px; color: var(--text3); text-decoration: none; }
+        .edit-back:hover { color: var(--text2); }
+    </style>
 </head>
 <body>
-<div class="header">
-    <div class="header-logo">
-        <div class="logo-mark">₹</div>
-        <h1>Edit Transaction</h1>
-    </div>
-</div>
+<div class="edit-page">
+    <a href="/" class="edit-back">← Back to dashboard</a>
+    <div class="report-card">
+        <div class="report-card-header">Edit transaction</div>
+        <form action="/edit/{{ expense.id }}" method="POST" class="exp-form">
 
-<div style="max-width:480px; margin: 40px auto; padding: 0 20px;">
-    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px;">
-        <div class="section-label" style="margin-bottom:20px;">Edit transaction</div>
-        <form action="/edit/{{ expense.id }}" method="POST" class="add-form">
-
-            <div style="margin-bottom:12px;">
-                <label class="field-label" style="display:block;margin-bottom:6px;">Type</label>
-                <div style="display:flex;gap:12px;">
-                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
-                        <input type="radio" name="type" value="expense" {% if expense.type == 'expense' %}checked{% endif %} onchange="toggleType(this.value)">
+            <div class="field-group">
+                <div class="field-lbl">Type</div>
+                <div style="display:flex;gap:14px;margin-top:4px;">
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">
+                        <input type="radio" name="type" value="expense"
+                               {% if expense.type == 'expense' %}checked{% endif %}
+                               onchange="toggleType(this.value)">
                         <span style="color:var(--danger)">Expense</span>
                     </label>
-                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
-                        <input type="radio" name="type" value="income" {% if expense.type == 'income' %}checked{% endif %} onchange="toggleType(this.value)">
-                        <span style="color:var(--success)">Income</span>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">
+                        <input type="radio" name="type" value="income"
+                               {% if expense.type == 'income' %}checked{% endif %}
+                               onchange="toggleType(this.value)">
+                        <span style="color:var(--income)">Income</span>
                     </label>
                 </div>
             </div>
 
-            <div>
-                <label class="field-label">Name</label>
-                <input type="text" name="name" value="{{ expense.name }}" required>
+            <div class="field-group">
+                <label class="field-lbl">Name</label>
+                <input type="text" name="name" value="{{ expense.name }}" class="field-input" required>
             </div>
-            <div>
-                <label class="field-label">Amount (₹)</label>
-                <input type="number" name="amount" value="{{ expense.amount }}" step="0.01" required>
+
+            <div class="field-group">
+                <label class="field-lbl">Amount (₹)</label>
+                <input type="number" name="amount" value="{{ expense.amount }}" class="field-input" step="0.01" required>
             </div>
-            <div id="expense-cats" style="display:{{ 'none' if expense.type == 'income' else 'block' }}">
-                <label class="field-label">Category</label>
-                <select name="category" id="exp-cat-select">
+
+            <div id="expense-cats" class="field-group">
+                <label class="field-lbl">Category</label>
+                <select name="category" id="exp-cat-select" class="field-input">
                     {% for cat in ['Food', 'Transport', 'Shopping', 'Health', 'Other'] %}
                     <option {% if expense.type == 'expense' and expense.category == cat %}selected{% endif %}>{{ cat }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div id="income-cats" style="display:{{ 'block' if expense.type == 'income' else 'none' }}">
-                <label class="field-label">Category</label>
-                <select name="category" id="inc-cat-select">
+
+            <div id="income-cats" class="field-group">
+                <label class="field-lbl">Category</label>
+                <select name="category" id="inc-cat-select" class="field-input">
                     {% for cat in ['Salary', 'Freelance', 'Gift', 'Investment', 'Other'] %}
                     <option {% if expense.type == 'income' and expense.category == cat %}selected{% endif %}>{{ cat }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div>
-                <label class="field-label">Date</label>
-                <input type="date" name="date" value="{{ expense.date }}" required>
+
+            <div class="field-group">
+                <label class="field-lbl">Date</label>
+                <input type="date" name="date" value="{{ expense.date }}" class="field-input" required>
             </div>
-            <div style="display:flex; gap:10px; margin-top:6px;">
-                <button type="submit" class="add-btn" style="flex:1">Save changes</button>
-                <a href="/" style="flex:1; text-align:center; padding:12px; color:var(--text-muted); text-decoration:none; border:1px solid var(--border); border-radius:8px; font-size:14px;">Cancel</a>
+
+            <div style="display:flex;gap:10px;margin-top:4px;">
+                <button type="submit" class="add-btn" style="flex:1;">Save changes</button>
+                <a href="/" style="flex:1;height:32px;display:inline-flex;align-items:center;justify-content:center;color:var(--text3);text-decoration:none;border:0.5px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:var(--sans);">Cancel</a>
             </div>
         </form>
     </div>
@@ -77,17 +90,16 @@ function toggleType(type) {
     const incSel = document.getElementById('inc-cat-select');
     if (type === 'income') {
         expDiv.style.display = 'none';
-        incDiv.style.display = 'block';
+        incDiv.style.display = 'flex';
         expSel.removeAttribute('name');
         incSel.setAttribute('name', 'category');
     } else {
-        expDiv.style.display = 'block';
+        expDiv.style.display = 'flex';
         incDiv.style.display = 'none';
         incSel.removeAttribute('name');
         expSel.setAttribute('name', 'category');
     }
 }
-// Ensure correct select has name on load
 toggleType(document.querySelector('input[name="type"]:checked').value);
 </script>
 </body>

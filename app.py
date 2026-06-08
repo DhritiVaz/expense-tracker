@@ -4,13 +4,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date, datetime, timedelta
 from collections import defaultdict
-import os, calendar, csv, io, re
-
-try:
-    import pdfplumber
-    PDF_SUPPORT = True
-except ImportError:
-    PDF_SUPPORT = False
+import os, calendar, csv, io
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
@@ -42,6 +36,7 @@ class Expense(db.Model):
     date = db.Column(db.Date, nullable=False)
     type = db.Column(db.String(10), default='expense')  # 'income' or 'expense'
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    account_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable=True)
 
 class Budget(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -53,6 +48,7 @@ class Account(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     balance = db.Column(db.Float, nullable=False)
+    is_default = db.Column(db.Boolean, default=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -61,6 +57,17 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # ===== HELPERS =====
+
+def _adjust_account_balance(account_id, type_, amount, reverse=False):
+    if not account_id:
+        return
+    account = Account.query.get(account_id)
+    if not account or account.user_id != current_user.id:
+        return
+    delta = amount if type_ == 'income' else -amount
+    if reverse:
+        delta = -delta
+    account.balance += delta
 
 def get_insights(expenses):
     if not expenses:
@@ -121,149 +128,6 @@ def get_personality(expenses):
     return personalities.get(top, personalities['Other'])
 
 # ===== PDF HELPERS =====
-
-def _parse_date(s):
-    s = str(s).strip()
-    for fmt in ['%d/%m/%Y', '%d-%m-%Y', '%d %b %Y', '%d %B %Y', '%Y-%m-%d', '%d/%m/%y', '%d-%m-%y']:
-        try:
-            return datetime.strptime(s, fmt).date()
-        except:
-            continue
-    return None
-
-def _parse_amount(s):
-    s = str(s).strip().upper().replace(',', '').replace(' ', '')
-    txn_type = 'debit'
-    if s.endswith('CR'):
-        txn_type = 'credit'; s = s[:-2]
-    elif s.endswith('DR'):
-        txn_type = 'debit'; s = s[:-2]
-    elif s.startswith('+'):
-        txn_type = 'credit'; s = s[1:]
-    elif s.startswith('-'):
-        txn_type = 'debit'; s = s[1:]
-    try:
-        val = float(s)
-        return (val, txn_type) if val > 0 else (None, None)
-    except:
-        return None, None
-
-def categorize_description(desc):
-    desc = desc.lower()
-    rules = [
-        ('Food',       ['swiggy','zomato','dominos','pizza','burger','mcdonalds','restaurant','cafe','food','lunch','dinner','breakfast','kitchen','dunzo']),
-        ('Transport',  ['uber','ola','rapido','metro','irctc','railway','petrol','fuel','parking','toll','cab','auto','bus','flight','indigo','spicejet']),
-        ('Shopping',   ['amazon','flipkart','myntra','meesho','ajio','shop','mall','retail','market','blinkit','zepto','instamart','bigbasket']),
-        ('Health',     ['hospital','clinic','pharmacy','medic','doctor','apollo','fortis','gym','fitness','1mg','pharmeasy','wellness']),
-        ('Salary',     ['salary','sal credit','payroll','stipend','wages']),
-        ('Investment', ['mutual fund','mf purchase','sip','zerodha','groww','stock','nse','bse','demat']),
-    ]
-    for cat, keywords in rules:
-        if any(k in desc for k in keywords):
-            return cat
-    return 'Other'
-
-def parse_bank_statement(pdf_file):
-    if not PDF_SUPPORT:
-        return []
-    transactions = []
-
-    with pdfplumber.open(pdf_file) as pdf:
-        for page in pdf.pages:
-            tables = page.extract_tables()
-            parsed_from_table = False
-
-            for table in (tables or []):
-                if not table or len(table) < 2:
-                    continue
-                header = [str(c).lower().strip() if c else '' for c in (table[0] or [])]
-                # detect columns
-                date_col  = next((i for i, h in enumerate(header) if 'date' in h), None)
-                desc_col  = next((i for i, h in enumerate(header) if any(k in h for k in ['narration','description','particulars','details','remarks','txn'])), None)
-                debit_col = next((i for i, h in enumerate(header) if any(k in h for k in ['debit','withdrawal','dr'])), None)
-                cred_col  = next((i for i, h in enumerate(header) if any(k in h for k in ['credit','deposit','cr'])), None)
-                amt_col   = next((i for i, h in enumerate(header) if h in ['amount','amt']), None)
-
-                start = 1 if date_col is not None else 0
-                for row in table[start:]:
-                    if not row or all(not c for c in row):
-                        continue
-                    cells = [str(c).strip() if c else '' for c in row]
-
-                    d = _parse_date(cells[date_col]) if date_col is not None and date_col < len(cells) else None
-                    if d is None:
-                        d = _parse_date(cells[0])
-                    if d is None:
-                        continue
-
-                    desc = ''
-                    if desc_col is not None and desc_col < len(cells):
-                        desc = cells[desc_col]
-                    if not desc:
-                        non_num = [c for c in cells[1:] if c and not re.match(r'^[\d,.\s]+(?:CR|DR)?$', c, re.I)]
-                        desc = max(non_num, key=len, default='Transaction')
-
-                    amount, txn_type = None, None
-                    if debit_col is not None and debit_col < len(cells) and cells[debit_col]:
-                        v, _ = _parse_amount(cells[debit_col])
-                        if v: amount, txn_type = v, 'debit'
-                    if amount is None and cred_col is not None and cred_col < len(cells) and cells[cred_col]:
-                        v, _ = _parse_amount(cells[cred_col])
-                        if v: amount, txn_type = v, 'credit'
-                    if amount is None and amt_col is not None and amt_col < len(cells):
-                        amount, txn_type = _parse_amount(cells[amt_col])
-                    if amount is None:
-                        for cell in reversed(cells):
-                            v, t = _parse_amount(cell)
-                            if v: amount, txn_type = v, t or 'debit'; break
-
-                    if d and amount:
-                        parsed_from_table = True
-                        transactions.append({
-                            'date': str(d),
-                            'description': desc[:80] or 'Transaction',
-                            'amount': round(amount, 2),
-                            'type': 'income' if txn_type == 'credit' else 'expense',
-                            'category': categorize_description(desc),
-                        })
-
-            if not parsed_from_table:
-                text = page.extract_text() or ''
-                date_re = re.compile(
-                    r'\b(\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4}|\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{4})\b',
-                    re.I
-                )
-                amt_re = re.compile(r'([\d,]+\.?\d*)\s*(Cr|Dr)?', re.I)
-                for line in text.split('\n'):
-                    line = line.strip()
-                    dm = date_re.search(line)
-                    if not dm:
-                        continue
-                    d = _parse_date(dm.group())
-                    if not d:
-                        continue
-                    matches = amt_re.findall(line)
-                    amount, txn_type = None, 'debit'
-                    for amt_s, suffix in reversed(matches):
-                        v, _ = _parse_amount(amt_s + suffix)
-                        if v:
-                            amount = round(v, 2)
-                            txn_type = 'credit' if suffix.upper() == 'CR' else 'debit'
-                            break
-                    if not amount:
-                        continue
-                    desc = line[dm.end():].strip()
-                    desc = re.sub(r'[\d,]+\.?\d*\s*(Cr|Dr)?', '', desc, flags=re.I).strip()
-                    desc = re.sub(r'\s+', ' ', desc)[:80] or 'Transaction'
-                    transactions.append({
-                        'date': str(d),
-                        'description': desc,
-                        'amount': amount,
-                        'type': 'income' if txn_type == 'credit' else 'expense',
-                        'category': categorize_description(desc),
-                    })
-
-    return transactions
 
 # ===== ROUTES =====
 
@@ -349,13 +213,12 @@ def index():
 
     # Accounts
     accounts = Account.query.filter_by(user_id=current_user.id).all()
+    default_account = next((a for a in accounts if a.is_default), None)
     total_balance = sum(a.balance for a in accounts)
-    balance_after_spending = total_balance - total_expenses + total_income
+    balance_after_spending = total_balance
 
     recurring_names = get_recurring(all_transactions)
-    streak = get_streak(all_transactions)
     insights = get_insights(all_transactions)
-    personality = get_personality(all_transactions)
 
     return render_template('index.html',
         expenses=transactions,
@@ -386,12 +249,11 @@ def index():
         income_breakdown=income_breakdown,
         budget_data=budget_data,
         accounts=accounts,
+        default_account=default_account,
         total_balance=total_balance,
         balance_after_spending=balance_after_spending,
         recurring_names=recurring_names,
-        streak=streak,
         insights=insights,
-        personality=personality,
         search=search,
         month_filter=month_filter,
     )
@@ -400,22 +262,26 @@ def index():
 @login_required
 def add():
     name = request.form.get('name', '').strip()
-    amount = request.form.get('amount', '0')
+    amount = float(request.form.get('amount', '0'))
     category = request.form.get('category', 'Other')
     date_str = request.form.get('date', str(date.today()))
     type_ = request.form.get('type', 'expense')
     tab = request.form.get('tab', 'expenses')
+    account_id_raw = request.form.get('account_id', '').strip()
+    account_id = int(account_id_raw) if account_id_raw else None
 
     try:
         entry = Expense(
             name=name,
-            amount=float(amount),
+            amount=amount,
             category=category,
             date=datetime.strptime(date_str, '%Y-%m-%d').date(),
             type=type_,
-            user_id=current_user.id
+            user_id=current_user.id,
+            account_id=account_id
         )
         db.session.add(entry)
+        _adjust_account_balance(account_id, type_, amount)
         db.session.commit()
     except Exception as e:
         print(f"Error adding: {e}")
@@ -427,7 +293,8 @@ def add():
 def delete(id):
     entry = Expense.query.get_or_404(id)
     if entry.user_id == current_user.id:
-        tab = entry.type  # redirect back to income or expenses tab
+        tab = entry.type
+        _adjust_account_balance(entry.account_id, entry.type, entry.amount, reverse=True)
         db.session.delete(entry)
         db.session.commit()
         return redirect(f'/?tab={tab}s')
@@ -440,16 +307,46 @@ def edit(id):
     if entry.user_id != current_user.id:
         return redirect('/')
     if request.method == 'POST':
+        new_amount = float(request.form.get('amount', entry.amount))
+        new_type = request.form.get('type', entry.type)
+        account_id_raw = request.form.get('account_id', '').strip()
+        new_account_id = int(account_id_raw) if account_id_raw else None
+
+        # Reverse old effect on old account
+        _adjust_account_balance(entry.account_id, entry.type, entry.amount, reverse=True)
+
         entry.name = request.form.get('name', entry.name)
-        entry.amount = float(request.form.get('amount', entry.amount))
+        entry.amount = new_amount
         entry.category = request.form.get('category', entry.category)
-        entry.type = request.form.get('type', entry.type)
+        entry.type = new_type
+        entry.account_id = new_account_id
         date_str = request.form.get('date')
         if date_str:
             entry.date = datetime.strptime(date_str, '%Y-%m-%d').date()
+
+        # Apply new effect on new account
+        _adjust_account_balance(new_account_id, new_type, new_amount)
+
         db.session.commit()
         return redirect(f'/?tab={entry.type}s')
-    return render_template('edit.html', expense=entry)
+    accounts = Account.query.filter_by(user_id=current_user.id).all()
+    return render_template('edit.html', expense=entry, accounts=accounts)
+
+@app.route('/set_budgets_bulk', methods=['POST'])
+@login_required
+def set_budgets_bulk():
+    data = request.get_json()
+    for item in data.get('budgets', []):
+        category = item.get('category')
+        limit = float(item.get('limit', 0))
+        budget = Budget.query.filter_by(user_id=current_user.id, category=category).first()
+        if budget:
+            budget.limit = limit
+        else:
+            budget = Budget(category=category, limit=limit, user_id=current_user.id)
+            db.session.add(budget)
+    db.session.commit()
+    return jsonify({'success': True})
 
 @app.route('/set_budget', methods=['POST'])
 @login_required
@@ -506,66 +403,15 @@ def update_account(id):
         db.session.commit()
     return redirect('/?tab=accounts')
 
-@app.route('/upload-statement', methods=['GET', 'POST'])
+@app.route('/accounts/set_default/<int:id>', methods=['POST'])
 @login_required
-def upload_statement():
-    if not PDF_SUPPORT:
-        return render_template('upload_statement.html', transactions=None,
-                               error='pdfplumber is not installed on this server.')
-    if request.method == 'GET':
-        return render_template('upload_statement.html', transactions=None, error=None)
-
-    f = request.files.get('pdf')
-    if not f or not f.filename.lower().endswith('.pdf'):
-        return render_template('upload_statement.html', transactions=None,
-                               error='Please upload a valid PDF file.')
-    try:
-        txns = parse_bank_statement(f)
-    except Exception as e:
-        return render_template('upload_statement.html', transactions=None,
-                               error=f'Could not parse PDF: {e}')
-
-    if not txns:
-        return render_template('upload_statement.html', transactions=None,
-                               error='No transactions detected. Try a different statement or check the format.')
-
-    existing_keys = {(str(e.date), e.amount) for e in Expense.query.filter_by(user_id=current_user.id).all()}
-    for t in txns:
-        t['duplicate'] = (t['date'], t['amount']) in existing_keys
-
-    expense_cats  = ['Food', 'Transport', 'Shopping', 'Health', 'Other']
-    income_cats   = ['Salary', 'Freelance', 'Gift', 'Investment', 'Other']
-    return render_template('upload_statement.html', transactions=txns, error=None,
-                           expense_cats=expense_cats, income_cats=income_cats)
-
-
-@app.route('/import-statement', methods=['POST'])
-@login_required
-def import_statement():
-    names      = request.form.getlist('name')
-    amounts    = request.form.getlist('amount')
-    dates      = request.form.getlist('date')
-    categories = request.form.getlist('category')
-    types      = request.form.getlist('type')
-
-    imported = 0
-    for i in range(len(names)):
-        try:
-            entry = Expense(
-                name=names[i][:100],
-                amount=float(amounts[i]),
-                category=categories[i],
-                date=datetime.strptime(dates[i], '%Y-%m-%d').date(),
-                type=types[i],
-                user_id=current_user.id
-            )
-            db.session.add(entry)
-            imported += 1
-        except Exception:
-            continue
+def set_default_account(id):
+    Account.query.filter_by(user_id=current_user.id).update({'is_default': False})
+    account = Account.query.get_or_404(id)
+    if account.user_id == current_user.id:
+        account.is_default = True
     db.session.commit()
-    return redirect(f'/?tab=expenses&imported={imported}')
-
+    return redirect('/?tab=accounts')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -575,7 +421,7 @@ def register():
         password = request.form.get('password')
         if User.query.filter_by(email=email).first():
             return render_template('register.html', error='Email already registered')
-        user = User(name=name, email=email, password=generate_password_hash(password))
+        user = User(name=name, email=email, password=generate_password_hash(password, method='pbkdf2:sha256'))
         db.session.add(user)
         db.session.commit()
         login_user(user)
@@ -602,17 +448,17 @@ def logout():
 
 with app.app_context():
     db.create_all()
-    # Migrate: add type column if it doesn't exist, then backfill
-    try:
-        db.session.execute(db.text("ALTER TABLE expense ADD COLUMN type VARCHAR(10) DEFAULT 'expense'"))
-        db.session.commit()
-    except:
-        pass  # column already exists
-    try:
-        db.session.execute(db.text("UPDATE expense SET type='expense' WHERE type IS NULL"))
-        db.session.commit()
-    except:
-        pass
+    for migration_sql in [
+        "ALTER TABLE expense ADD COLUMN type VARCHAR(10) DEFAULT 'expense'",
+        "UPDATE expense SET type='expense' WHERE type IS NULL",
+        "ALTER TABLE expense ADD COLUMN account_id INTEGER REFERENCES account(id)",
+        "ALTER TABLE account ADD COLUMN is_default BOOLEAN NOT NULL DEFAULT 0",
+    ]:
+        try:
+            db.session.execute(db.text(migration_sql))
+            db.session.commit()
+        except Exception:
+            pass
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5001)
