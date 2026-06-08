@@ -59,11 +59,29 @@ class Account(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class Category(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    type = db.Column(db.String(10), nullable=False)  # 'expense' or 'income'
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    is_default = db.Column(db.Boolean, default=True)
+
+DEFAULT_EXPENSE_CATS = ['Food', 'Transport', 'Shopping', 'Health', 'Other']
+DEFAULT_INCOME_CATS = ['Salary', 'Freelance', 'Gift', 'Investment', 'Other']
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 # ===== HELPERS =====
+
+def _ensure_categories(user_id):
+    if Category.query.filter_by(user_id=user_id).count() == 0:
+        for name in DEFAULT_EXPENSE_CATS:
+            db.session.add(Category(name=name, type='expense', user_id=user_id, is_default=True))
+        for name in DEFAULT_INCOME_CATS:
+            db.session.add(Category(name=name, type='income', user_id=user_id, is_default=True))
+        db.session.commit()
 
 def _adjust_account_balance(account_id, type_, amount, reverse=False):
     if not account_id:
@@ -140,8 +158,9 @@ def get_personality(expenses):
 
 
 @app.route('/', methods=['GET'])
-@login_required
 def index():
+    if not current_user.is_authenticated:
+        return render_template('landing.html')
     search = request.args.get('search', '')
     month_filter = request.args.get('month', '')
     today = date.today()
@@ -204,14 +223,17 @@ def index():
     daily_avg = this_month_exp / days_this_month if days_this_month else 0
     top_expenses = sorted(all_expenses, key=lambda e: e.amount, reverse=True)[:5]
 
-    categories = ['Food', 'Transport', 'Shopping', 'Health', 'Other']
+    _ensure_categories(current_user.id)
+    expense_cats = Category.query.filter_by(user_id=current_user.id, type='expense').all()
+    income_cats = Category.query.filter_by(user_id=current_user.id, type='income').all()
+    categories = [c.name for c in expense_cats]
+    income_category_list = [c.name for c in income_cats]
+
     category_totals = [sum(e.amount for e in all_expenses if e.category == c) for c in categories]
     category_breakdown = [(c, t) for c, t in zip(categories, category_totals) if t > 0]
 
-    # Income categories
-    income_categories = ['Salary', 'Freelance', 'Gift', 'Investment', 'Other']
-    income_cat_totals = [sum(e.amount for e in all_income if e.category == c) for c in income_categories]
-    income_breakdown = [(c, t) for c, t in zip(income_categories, income_cat_totals) if t > 0]
+    income_cat_totals = [sum(e.amount for e in all_income if e.category == c) for c in income_category_list]
+    income_breakdown = [(c, t) for c, t in zip(income_category_list, income_cat_totals) if t > 0]
 
     # Budget
     budgets = Budget.query.filter_by(user_id=current_user.id).all()
@@ -252,10 +274,11 @@ def index():
         categories=categories,
         category_totals=category_totals,
         category_breakdown=category_breakdown,
-        income_categories=income_categories,
         income_cat_totals=income_cat_totals,
         income_breakdown=income_breakdown,
         budget_data=budget_data,
+        expense_cats=expense_cats,
+        income_cats=income_cats,
         accounts=accounts,
         default_account=default_account,
         total_balance=total_balance,
@@ -421,6 +444,25 @@ def set_default_account(id):
     db.session.commit()
     return redirect('/?tab=accounts')
 
+@app.route('/categories/add', methods=['POST'])
+@login_required
+def add_category():
+    name = request.form.get('name', '').strip().title()
+    type_ = request.form.get('type', 'expense')
+    if name and not Category.query.filter_by(user_id=current_user.id, name=name, type=type_).first():
+        db.session.add(Category(name=name, type=type_, user_id=current_user.id, is_default=False))
+        db.session.commit()
+    return redirect('/?tab=budget')
+
+@app.route('/categories/delete/<int:id>', methods=['POST'])
+@login_required
+def delete_category(id):
+    cat = Category.query.get_or_404(id)
+    if cat.user_id == current_user.id and not cat.is_default:
+        db.session.delete(cat)
+        db.session.commit()
+    return redirect('/?tab=budget')
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -431,6 +473,11 @@ def register():
             return render_template('register.html', error='Email already registered')
         user = User(name=name, email=email, password=generate_password_hash(password, method='pbkdf2:sha256'))
         db.session.add(user)
+        db.session.commit()
+        for n in DEFAULT_EXPENSE_CATS:
+            db.session.add(Category(name=n, type='expense', user_id=user.id, is_default=True))
+        for n in DEFAULT_INCOME_CATS:
+            db.session.add(Category(name=n, type='income', user_id=user.id, is_default=True))
         db.session.commit()
         login_user(user)
         return redirect('/')

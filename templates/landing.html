@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        html, body {
+            height: 100%;
+            overflow: hidden !important;
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .page {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* NAV */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 40px;
+            border-bottom: 0.5px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .nav-logo { display: flex; align-items: center; gap: 10px; }
+
+        .nav-icon {
+            width: 28px; height: 28px;
+            background: var(--accent); border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--mono); font-size: 12px; font-weight: 600; color: #0a0a0a;
+        }
+
+        .nav-title { font-size: 14px; font-weight: 600; color: var(--text); }
+
+        .nav-right { display: flex; align-items: center; gap: 10px; }
+
+        .nav-theme {
+            background: none; border: 0.5px solid var(--border);
+            border-radius: 6px; padding: 5px 7px; cursor: pointer;
+            color: var(--text3); display: flex; align-items: center;
+        }
+        .nav-theme:hover { color: var(--text); }
+
+        .btn-ghost {
+            padding: 7px 16px; background: none;
+            border: 0.5px solid var(--border); border-radius: 6px;
+            font-size: 12px; font-weight: 500; color: var(--text2);
+            cursor: pointer; text-decoration: none; transition: border-color 0.15s, color 0.15s;
+        }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+        .btn-primary {
+            padding: 7px 18px; background: var(--accent); border: none;
+            border-radius: 6px; font-size: 12px; font-weight: 600;
+            color: #0a0a0a; cursor: pointer; text-decoration: none; transition: background 0.15s;
+        }
+        .btn-primary:hover { background: var(--accent2); }
+
+        /* MAIN */
+        .main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr;
+            min-height: 0;
+        }
+
+        /* LEFT: HERO */
+        .hero {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px 64px;
+            border-right: 0.5px solid var(--border);
+        }
+
+        .hero-headline {
+            font-size: 46px; font-weight: 600; line-height: 1.08;
+            letter-spacing: -0.03em; color: var(--text); margin-bottom: 18px;
+        }
+        .hero-headline span { color: var(--accent); }
+
+        .hero-sub {
+            font-size: 14px; color: var(--text3); line-height: 1.65;
+            max-width: 340px; margin-bottom: 36px;
+        }
+
+        .hero-ctas { display: flex; gap: 10px; align-items: center; margin-bottom: 44px; }
+
+        .btn-hero {
+            padding: 11px 28px; background: var(--accent); border: none;
+            border-radius: 7px; font-size: 13px; font-weight: 600;
+            color: #0a0a0a; cursor: pointer; text-decoration: none; transition: background 0.15s;
+        }
+        .btn-hero:hover { background: var(--accent2); }
+
+        .btn-hero-ghost {
+            padding: 11px 28px; background: none;
+            border: 0.5px solid var(--border); border-radius: 7px;
+            font-size: 13px; font-weight: 500; color: var(--text2);
+            cursor: pointer; text-decoration: none; transition: border-color 0.15s, color 0.15s;
+        }
+        .btn-hero-ghost:hover { border-color: var(--text2); color: var(--text); }
+
+        .hero-stats {
+            display: flex; gap: 40px;
+            padding-top: 32px;
+            border-top: 0.5px solid var(--border);
+            width: 100%; justify-content: center;
+        }
+
+        .hero-stat-val {
+            font-family: var(--mono); font-size: 24px; font-weight: 600;
+            color: var(--accent); letter-spacing: -0.02em; margin-bottom: 4px;
+        }
+        .hero-stat-label { font-size: 11px; color: var(--text3); }
+
+        /* RIGHT: FEATURES */
+        .features {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 40px 48px;
+            gap: 2px;
+        }
+
+        .features-label {
+            font-size: 10px; font-weight: 500; letter-spacing: 0.08em;
+            text-transform: uppercase; color: var(--text3); margin-bottom: 16px;
+            padding-left: 16px;
+        }
+
+        .feature-row {
+            display: flex; align-items: flex-start; gap: 14px;
+            padding: 14px 16px; border-radius: 8px;
+            transition: background 0.15s;
+        }
+        .feature-row:hover { background: var(--panel2); }
+
+        .feature-icon {
+            width: 32px; height: 32px; flex-shrink: 0;
+            background: var(--accent-bg); border: 0.5px solid var(--accent-border);
+            border-radius: 7px; display: flex; align-items: center;
+            justify-content: center; color: var(--accent); margin-top: 1px;
+        }
+
+        .feature-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+        .feature-desc { font-size: 12px; color: var(--text3); line-height: 1.5; }
+
+        /* FOOTER */
+        footer {
+            border-top: 0.5px solid var(--border);
+            padding: 14px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .footer-left { font-size: 11px; color: var(--text3); }
+        .footer-right { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- NAV -->
+    <nav>
+        <div class="nav-logo">
+            <div class="nav-icon">₹</div>
+            <span class="nav-title">Expense Tracker</span>
+        </div>
+        <div class="nav-right">
+            <button class="nav-theme" onclick="toggleTheme()">
+                <svg id="theme-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+            </button>
+            <a href="/login" class="btn-ghost">Sign in</a>
+            <a href="/register" class="btn-primary">Get started</a>
+        </div>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="main">
+
+        <!-- LEFT: HERO -->
+        <div class="hero">
+            <h1 class="hero-headline">Know exactly<br>where your<br><span>money goes</span></h1>
+            <p class="hero-sub">Track expenses, manage budgets, and understand your spending — all in one clean, minimal app.</p>
+            <div class="hero-ctas">
+                <a href="/register" class="btn-hero">Start for free</a>
+                <a href="/login" class="btn-hero-ghost">Sign in</a>
+            </div>
+            <div class="hero-stats">
+                <div>
+                    <div class="hero-stat-val">₹0</div>
+                    <div class="hero-stat-label">Cost to use</div>
+                </div>
+                <div>
+                    <div class="hero-stat-val">5+</div>
+                    <div class="hero-stat-label">Categories</div>
+                </div>
+                <div>
+                    <div class="hero-stat-val">100%</div>
+                    <div class="hero-stat-label">Your data</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: FEATURES -->
+        <div class="features">
+            <div class="features-label">Everything you need</div>
+
+            <div class="feature-row">
+                <div class="feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+                <div>
+                    <div class="feature-title">Expense & income tracking</div>
+                    <div class="feature-desc">Log transactions instantly with Quick Add — just type "coffee 80 today".</div>
+                </div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </div>
+                <div>
+                    <div class="feature-title">Custom categories & budgets</div>
+                    <div class="feature-desc">Create your own categories, set monthly limits, and get alerted before you overspend.</div>
+                </div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <div>
+                    <div class="feature-title">Account balances</div>
+                    <div class="feature-desc">Link bank accounts — balances update automatically with each transaction.</div>
+                </div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
+                <div>
+                    <div class="feature-title">Reports & insights</div>
+                    <div class="feature-desc">Monthly breakdowns, spending patterns, and top expense analysis.</div>
+                </div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </div>
+                <div>
+                    <div class="feature-title">Smart insights</div>
+                    <div class="feature-desc">See your spending personality and month-over-month comparisons.</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-left">© 2026 Expense Tracker</div>
+        <div class="footer-right">built with ♥</div>
+    </footer>
+
+</div>
+
+<script>
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    updateThemeIcon(saved === 'dark');
+
+    function updateThemeIcon(isDark) {
+        const icon = document.getElementById('theme-icon');
+        if (!icon) return;
+        if (isDark) {
+            icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+        } else {
+            icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+        }
+    }
+
+    function toggleTheme() {
+        const html = document.documentElement;
+        const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        updateThemeIcon(next === 'dark');
+    }
+</script>
+</body>
+</html>
