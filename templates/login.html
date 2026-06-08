@@ -14,7 +14,6 @@
             background: var(--bg);
             padding: 20px;
         }
-
         .auth-card {
             width: 100%;
             max-width: 380px;
@@ -23,111 +22,65 @@
             border-radius: 12px;
             padding: 32px;
         }
-
-        .auth-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 28px;
-        }
-
+        .auth-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
         .auth-icon {
-            width: 32px;
-            height: 32px;
-            background: var(--accent);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: var(--mono);
-            font-size: 14px;
-            font-weight: 600;
-            color: #0a0a0a;
+            width: 32px; height: 32px; background: var(--accent); border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--mono); font-size: 14px; font-weight: 600; color: #0a0a0a;
         }
-
         .auth-title { font-size: 18px; font-weight: 600; color: var(--text); }
-
-        .auth-subtitle {
-            font-size: 13px;
-            color: var(--text3);
-            margin-bottom: 24px;
-        }
-
-        .auth-field {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            margin-bottom: 14px;
-        }
-
-        .auth-label {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            color: var(--text3);
-        }
-
+        .auth-subtitle { font-size: 13px; color: var(--text3); margin-bottom: 24px; }
+        .auth-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+        .auth-label { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text3); }
         .auth-input {
-            padding: 10px 12px;
-            background: var(--panel2);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text);
-            font-size: 13px;
-            font-family: var(--sans);
-            width: 100%;
-            transition: border-color 0.15s;
+            padding: 10px 12px; background: var(--panel2); border: 1px solid var(--border);
+            border-radius: 6px; color: var(--text); font-size: 13px; font-family: var(--sans);
+            width: 100%; transition: border-color 0.15s; box-sizing: border-box;
         }
-
         .auth-input:focus { outline: none; border-color: var(--accent); }
         .auth-input::placeholder { color: var(--text3); }
-
         .auth-btn {
-            width: 100%;
-            padding: 11px;
-            background: var(--accent);
-            color: #0a0a0a;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            font-family: var(--sans);
-            cursor: pointer;
-            margin-top: 6px;
-            transition: background 0.15s;
+            width: 100%; padding: 11px; background: var(--accent); color: #0a0a0a;
+            border: none; border-radius: 6px; font-size: 13px; font-weight: 600;
+            font-family: var(--sans); cursor: pointer; margin-top: 6px; transition: background 0.15s;
         }
-
         .auth-btn:hover { background: var(--accent2); }
-
-        .auth-link {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 12px;
-            color: var(--text3);
-        }
-
+        .auth-link { text-align: center; margin-top: 20px; font-size: 12px; color: var(--text3); }
         .auth-link a { color: var(--accent); text-decoration: none; }
         .auth-link a:hover { text-decoration: underline; }
-
         .auth-error {
-            background: var(--danger-bg);
-            border: 1px solid rgba(205,92,92,0.3);
-            border-radius: 6px;
-            padding: 10px 12px;
-            font-size: 12px;
-            color: var(--danger);
-            margin-bottom: 16px;
+            background: var(--danger-bg); border: 1px solid rgba(205,92,92,0.3);
+            border-radius: 6px; padding: 10px 12px; font-size: 12px;
+            color: var(--danger); margin-bottom: 16px;
         }
-
-        .auth-divider {
-            height: 1px;
-            background: var(--border);
-            margin: 20px 0;
+        .pwd-wrap { position: relative; }
+        .pwd-wrap .auth-input { padding-right: 38px; }
+        .pwd-toggle {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer; color: var(--text3);
+            padding: 0; display: flex; align-items: center;
         }
+        .pwd-toggle:hover { color: var(--text2); }
+        .theme-toggle-btn {
+            position: fixed; top: 16px; right: 16px;
+            background: var(--panel); border: 1px solid var(--border);
+            border-radius: 6px; padding: 6px 8px; cursor: pointer;
+            color: var(--text3); display: flex; align-items: center;
+        }
+        .theme-toggle-btn:hover { color: var(--text); }
     </style>
 </head>
 <body>
+
+<button class="theme-toggle-btn" onclick="toggleTheme()">
+    <svg id="theme-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+</button>
+
 <div class="auth-wrap">
     <div class="auth-card">
         <div class="auth-logo">
@@ -137,13 +90,9 @@
 
         <div class="auth-subtitle">Sign in to your account</div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="auth-error">{{ message }}</div>
-        {% endfor %}
+        {% if error %}
+        <div class="auth-error">{{ error }}</div>
         {% endif %}
-        {% endwith %}
 
         <form method="POST" action="/login">
             <div class="auth-field">
@@ -152,7 +101,12 @@
             </div>
             <div class="auth-field">
                 <label class="auth-label">Password</label>
-                <input type="password" name="password" class="auth-input" placeholder="••••••••" required>
+                <div class="pwd-wrap">
+                    <input type="password" id="login-pwd" name="password" class="auth-input" placeholder="••••••••" required>
+                    <button type="button" class="pwd-toggle" onclick="togglePwd('login-pwd', this)">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </div>
             </div>
             <button type="submit" class="auth-btn">Sign in</button>
         </form>
@@ -164,8 +118,36 @@
 </div>
 
 <script>
-    const saved = localStorage.getItem('theme');
-    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    updateThemeIcon(saved === 'dark');
+
+    function updateThemeIcon(isDark) {
+        const icon = document.getElementById('theme-icon');
+        if (!icon) return;
+        if (isDark) {
+            icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+        } else {
+            icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+        }
+    }
+
+    function toggleTheme() {
+        const html = document.documentElement;
+        const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        updateThemeIcon(next === 'dark');
+    }
+
+    function togglePwd(id, btn) {
+        const inp = document.getElementById(id);
+        const show = inp.type === 'password';
+        inp.type = show ? 'text' : 'password';
+        btn.innerHTML = show
+            ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+            : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    }
 </script>
 </body>
 </html>

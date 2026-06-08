@@ -946,6 +946,12 @@ tbody td { padding: 9px 16px; font-size: 12px; vertical-align: middle; }
     grid-template-columns: 1fr 1fr;
     gap: 12px;
     padding-bottom: 4px;
+    flex: 1;
+    min-height: 0;
+}
+
+.reports-bottom-row .report-card {
+    min-height: 0;
 }
 
 .report-card {
@@ -1041,7 +1047,7 @@ tbody td { padding: 9px 16px; font-size: 12px; vertical-align: middle; }
 .report-cat-bar { height: 3px; background: var(--accent); border-radius: 2px; }
 .report-cat-val { font-size: 11px; font-family: var(--mono); color: var(--text2); white-space: nowrap; min-width: 60px; text-align: right; }
 
-.report-chart-wrap { padding: 12px 16px; height: 200px; position: relative; }
+.report-chart-wrap { padding: 12px 16px; height: 200px; position: relative; flex: 1; min-height: 0; }
 
 /* ===== TOAST ===== */
 .toast {

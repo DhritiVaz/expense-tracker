@@ -24,6 +24,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+login_manager.login_message = None
 
 # ===== MODELS =====
 
@@ -137,12 +138,6 @@ def get_personality(expenses):
 
 # ===== ROUTES =====
 
-@app.route('/debug')
-def debug():
-    import sys
-    db_url = os.environ.get('DATABASE_URL', 'NOT SET')
-    safe_url = db_url[:30] + '...' if len(db_url) > 30 else db_url
-    return f"Python: {sys.version}<br>DATABASE_URL starts with: {safe_url}<br>SECRET_KEY set: {bool(os.environ.get('SECRET_KEY'))}"
 
 @app.route('/', methods=['GET'])
 @login_required
@@ -429,19 +424,16 @@ def set_default_account(id):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        try:
-            name = request.form.get('name')
-            email = request.form.get('email')
-            password = request.form.get('password')
-            if User.query.filter_by(email=email).first():
-                return render_template('register.html', error='Email already registered')
-            user = User(name=name, email=email, password=generate_password_hash(password, method='pbkdf2:sha256'))
-            db.session.add(user)
-            db.session.commit()
-            login_user(user)
-            return redirect('/')
-        except Exception as e:
-            return f"Register error: {str(e)}", 500
+        name = request.form.get('name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        if User.query.filter_by(email=email).first():
+            return render_template('register.html', error='Email already registered')
+        user = User(name=name, email=email, password=generate_password_hash(password, method='pbkdf2:sha256'))
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
+        return redirect('/')
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
