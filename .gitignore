@@ -6,6 +6,6 @@ instance/
 .env
 .DS_Store
 *.png
-screenshots/
+!screenshots/*.png
 seed_test.py
 clean_test.py
