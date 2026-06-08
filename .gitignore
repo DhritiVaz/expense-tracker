@@ -6,3 +6,6 @@ instance/
 .env
 .DS_Store
 *.png
+screenshots/
+seed_test.py
+clean_test.py
