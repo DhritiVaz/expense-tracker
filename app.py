@@ -446,19 +446,22 @@ def logout():
     logout_user()
     return redirect('/login')
 
-with app.app_context():
-    db.create_all()
-    for migration_sql in [
-        "ALTER TABLE expense ADD COLUMN type VARCHAR(10) DEFAULT 'expense'",
-        "UPDATE expense SET type='expense' WHERE type IS NULL",
-        "ALTER TABLE expense ADD COLUMN account_id INTEGER REFERENCES account(id)",
-        "ALTER TABLE account ADD COLUMN is_default BOOLEAN NOT NULL DEFAULT 0",
-    ]:
-        try:
-            db.session.execute(db.text(migration_sql))
-            db.session.commit()
-        except Exception:
-            pass
+try:
+    with app.app_context():
+        db.create_all()
+        for migration_sql in [
+            "ALTER TABLE expense ADD COLUMN type VARCHAR(10) DEFAULT 'expense'",
+            "UPDATE expense SET type='expense' WHERE type IS NULL",
+            "ALTER TABLE expense ADD COLUMN account_id INTEGER REFERENCES account(id)",
+            "ALTER TABLE account ADD COLUMN is_default BOOLEAN NOT NULL DEFAULT 0",
+        ]:
+            try:
+                db.session.execute(db.text(migration_sql))
+                db.session.commit()
+            except Exception:
+                pass
+except Exception as e:
+    print(f"Startup DB error: {e}")
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
