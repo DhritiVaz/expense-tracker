@@ -2,7 +2,7 @@
 
 A full-stack personal finance web app built with Python, Flask, and PostgreSQL. Track expenses and income, set category budgets, manage multiple accounts, and get smart spending insights — with a natural language quick-add feature you won't find in most free tools.
 
-**Live demo:** https://YOUR_VERCEL_URL.vercel.app
+**Live demo:** https://expense-tracker-murex-beta-64.vercel.app/
 
 ---
 
@@ -106,7 +106,12 @@ python app.py
 
 Open [http://localhost:5001](http://localhost:5001) in your browser.
 
-No environment variables needed for local dev — it uses SQLite automatically.
+By default it uses SQLite locally. To connect to a PostgreSQL database instead, create a `.env` file:
+
+```
+DATABASE_URL=postgresql://...
+SECRET_KEY=your-secret-key
+```
 
 ---
 
